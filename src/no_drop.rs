@@ -22,7 +22,7 @@ pub trait Consume: Sized {
     /// # Examples
     ///
     /// ```rust
-    /// use no_drop::dbg::NoDrop;
+    /// use no_drop::dbg::{Consume, NoDrop};
     ///
     /// let wrapper = NoDrop::new(42);
     /// assert_eq!(wrapper.consume(), 42);
