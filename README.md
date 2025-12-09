@@ -3,13 +3,12 @@
 [![Build](https://github.com/MaxMahem/no_drop/actions/workflows/build.yml/badge.svg)](https://github.com/MaxMahem/no_drop/actions/workflows/build.yml)
 [![Docs](https://github.com/MaxMahem/no_drop/actions/workflows/docs.yml/badge.svg)](https://MaxMahem.github.io/no_drop/no_drop/index.html)
 [![dependency status](https://deps.rs/repo/github/MaxMahem/no_drop/status.svg)](https://deps.rs/repo/github/MaxMahem/no_drop)
-[![codecov](https://codecov.io/github/MaxMahem/no_drop/graph/badge.svg?token=N5JJLLQ04L)](https://codecov.io/github/MaxMahem/no_drop)
+[![codecov](https://codecov.io/github/MaxMahem/no_drop/graph/badge.svg?token=VqGfOfh0vp)](https://codecov.io/github/MaxMahem/no_drop)
 ![GitHub License](https://img.shields.io/github/license/MaxMahem/no_drop)
 
 A simple wrapper type that guards against values being automatically dropped, ensuring a value is explicitly consumed.
 
-The primary use case is for double checking logic during development, ensuring values that
-are desired to be preseved/moved on from, are not accidentally dropped.
+The primary use case is for double-checking logic during development, ensuring values that are desired to be preserved/moved from are not accidentally dropped.
 
 ## Features
 
