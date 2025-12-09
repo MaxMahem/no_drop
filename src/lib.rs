@@ -16,6 +16,12 @@ pub mod dbg {
 
     #[cfg(not(debug_assertions))]
     pub use crate::no_drop::NoDropPassthrough as NoDrop;
+
+    #[cfg(debug_assertions)]
+    pub use crate::no_drop::IntoNoDropRls as IntoNoDrop;
+
+    #[cfg(not(debug_assertions))]
+    pub use crate::no_drop::IntoNoDropDbg as IntoNoDrop;
 }
 
 /// Module containing [`NoDrop`] with always-[`panic!`]ing behavior.
@@ -24,6 +30,7 @@ pub mod dbg {
 /// [`Consume::consume`](crate::no_drop::Consume)ing the value will [`panic!`].
 pub mod rls {
     pub use crate::no_drop::Consume;
-
     pub use crate::no_drop::NoDrop;
+
+    pub use crate::no_drop::IntoNoDropRls as IntoNoDrop;
 }

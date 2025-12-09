@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-12-09
+
+### Added
+- `IntoNoDrop` extension trait providing `.no_drop()` method for wrapping values
+- Trait is conditionally aliased: `IntoNoDropRls` in debug mode, `IntoNoDropDbg` in release mode for `dbg` module
+- `IntoNoDropDbg` trait for zero-cost wrapper creation
+- `IntoNoDropRls` trait for always-panicking wrapper creation
+
+[0.1.2]: https://github.com/MaxMahem/no_drop/releases/tag/v0.1.2
+
 ## [0.1.1] - 2025-12-08
 
 ### Added

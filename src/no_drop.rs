@@ -87,6 +87,36 @@ impl<T> Consume for NoDropPassthrough<T> {
     }
 }
 
+/// Extension trait for wrapping values in a [`NoDropPassthrough`].
+///
+/// This is the "dbg" version that returns a zero-cost passthrough wrapper.
+#[allow(dead_code)]
+pub trait IntoNoDropDbg: Sized {
+    /// Wraps this value in a [`NoDropPassthrough`].
+    fn no_drop(self) -> NoDropPassthrough<Self>;
+}
+
+impl<T> IntoNoDropDbg for T {
+    fn no_drop(self) -> NoDropPassthrough<Self> {
+        NoDropPassthrough::new(self)
+    }
+}
+
+/// Extension trait for wrapping values in a [`NoDrop`].
+///
+/// This is the "rls" version that always returns a panicking wrapper.
+#[allow(dead_code)]
+pub trait IntoNoDropRls: Sized {
+    /// Wraps this value in a [`NoDrop`].
+    fn no_drop(self) -> NoDrop<Self>;
+}
+
+impl<T> IntoNoDropRls for T {
+    fn no_drop(self) -> NoDrop<Self> {
+        NoDrop::new(self)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

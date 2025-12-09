@@ -1,6 +1,6 @@
 [package]
 name = "no_drop"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "A simple wrapper type that guards against a value being automatically dropped."
 repository = "https://github.com/MaxMahem/no_drop"
