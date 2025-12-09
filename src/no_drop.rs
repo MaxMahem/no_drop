@@ -98,6 +98,13 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "Value was dropped without being consumed")]
+    fn no_drop_panics() {
+        let wrapper = NoDrop::new(42);
+        drop(wrapper);
+    }
+
+    #[test]
     fn no_drop_passthrough() {
         let wrapper = NoDropPassthrough::new(42);
         assert_eq!(wrapper.consume(), 42);
