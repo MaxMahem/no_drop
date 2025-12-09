@@ -139,4 +139,16 @@ mod tests {
         let wrapper = NoDropPassthrough::new(42);
         assert_eq!(wrapper.consume(), 42);
     }
+
+    #[test]
+    fn into_no_drop_dbg_trait() {
+        let wrapper = IntoNoDropDbg::no_drop(42);
+        assert_eq!(wrapper.consume(), 42);
+    }
+
+    #[test]
+    fn into_no_drop_rls_trait() {
+        let wrapper = IntoNoDropRls::no_drop("test".to_string());
+        assert_eq!(wrapper.consume(), "test");
+    }
 }
