@@ -36,6 +36,16 @@ assert_eq!(inner, 42);
 // drop(value); // panic: "Value was dropped without being consumed"
 ```
 
+Or use the convenient `.no_drop()` method via the `IntoNoDrop` trait:
+
+```rust
+use no_drop::dbg::{Consume, IntoNoDrop};
+
+let value = 42.no_drop();  // Wraps the value automatically
+let inner = value.consume();
+assert_eq!(inner, 42);
+```
+
 ### Always-Panicking Protection (`rls` module)
 
 The `rls` module provides panic protection in both debug and release builds:
