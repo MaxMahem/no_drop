@@ -35,7 +35,7 @@ pub trait Consume: Sized {
 ///
 /// This type uses `unsafe` code to ensure the inner value is only extracted via
 /// [`Consume::consume`]. If dropped normally, it will [`panic!`].
-#[derive(Debug, derive_more::Constructor)]
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct NoDrop<T>(T);
 
@@ -65,7 +65,7 @@ impl<T> Consume for NoDrop<T> {
 ///
 /// This is a transparent no-op wrapper around the `T` value. It does not panic when
 /// dropped. Intended to be transparently substituted for [`NoDrop`] in release builds.
-#[derive(Debug, derive_more::Constructor)]
+#[derive(Debug)]
 #[doc(hidden)]
 #[allow(dead_code)]
 #[repr(transparent)]
@@ -80,5 +80,22 @@ impl<T> Consume for NoDropPassthrough<T> {
 
     fn consume(self) -> T {
         self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_drop() {
+        let wrapper = NoDrop::new(42);
+        assert_eq!(wrapper.consume(), 42);
+    }
+
+    #[test]
+    fn no_drop_passthrough() {
+        let wrapper = NoDropPassthrough::new(42);
+        assert_eq!(wrapper.consume(), 42);
     }
 }
