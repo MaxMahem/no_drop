@@ -102,7 +102,7 @@ impl<'msg, T> Drop for NoDropMsg<'msg, T> {
 mod tests {
     use super::*;
     use crate::into::{IntoNoDropDbg, IntoNoDropRls};
-    use crate::test_macros::{test_clone, test_ctor, test_forget};
+    use crate::no_drop::test_macros::{test_clone, test_ctor, test_forget};
 
     #[test]
     #[should_panic(expected = "custom panic message")]

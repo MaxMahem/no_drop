@@ -117,38 +117,16 @@ impl<'msg> Clone for NoDropPass<'msg, Msg, ()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::no_drop::test_macros::{test_clone, test_ctor, test_forget};
 
     // Tests for Empty variant
-    #[test]
-    fn passthrough_empty_wrap_consume() {
-        let wrapper = NoDropPass::<Empty, _>::wrap(42);
-        assert_eq!(wrapper.unwrap(), 42);
-    }
+    test_ctor!(passthrough_empty_wrap_consume, NoDropPass::<Empty, _>::wrap, (42), 42);
+    test_ctor!(passthrough_empty_new, NoDropPass::<Empty, ()>::new, (), ());
+    test_ctor!(passthrough_empty_default, NoDropPass::<Empty, ()>::default, (), ());
 
-    #[test]
-    fn passthrough_empty_new() {
-        let wrapper = NoDropPass::<Empty, ()>::new();
-        assert_eq!(*wrapper, ());
-    }
+    test_forget!(passthrough_empty_forget, NoDropPass::<Empty, _>::wrap, (42));
 
-    #[test]
-    fn passthrough_empty_default() {
-        let wrapper = NoDropPass::<Empty, ()>::default();
-        assert_eq!(*wrapper, ());
-    }
-
-    #[test]
-    fn passthrough_empty_forget() {
-        let wrapper = NoDropPass::<Empty, _>::wrap(42);
-        wrapper.forget();
-    }
-
-    #[test]
-    fn passthrough_empty_clone() {
-        let wrapper = NoDropPass::<Empty, ()>::new();
-        let cloned = wrapper.clone();
-        assert_eq!(wrapper, cloned);
-    }
+    test_clone!(passthrough_empty_clone, NoDropPass<'static, Empty, ()>, NoDropPass::<Empty, ()>::new, ());
 
     #[test]
     fn passthrough_empty_drop_no_panic() {
@@ -157,30 +135,12 @@ mod tests {
     }
 
     // Tests for Msg variant
-    #[test]
-    fn passthrough_msg_wrap_consume() {
-        let wrapper = NoDropPass::<Msg, _>::wrap(42, "message");
-        assert_eq!(wrapper.unwrap(), 42);
-    }
+    test_ctor!(passthrough_msg_wrap_consume, NoDropPass::<Msg, _>::wrap, (42, "message"), 42);
+    test_ctor!(passthrough_msg_guard, NoDropPass::<Msg, ()>::guard, ("expected message"), ());
 
-    #[test]
-    fn passthrough_msg_guard() {
-        let wrapper = NoDropPass::<Msg, ()>::guard("expected message");
-        assert_eq!(*wrapper, ());
-    }
+    test_forget!(passthrough_msg_forget, NoDropPass::<Msg, _>::wrap, (42, "message"));
 
-    #[test]
-    fn passthrough_msg_forget() {
-        let wrapper = NoDropPass::<Msg, _>::wrap(42, "message");
-        wrapper.forget();
-    }
-
-    #[test]
-    fn passthrough_msg_clone() {
-        let wrapper = NoDropPass::<Msg, ()>::guard("message");
-        let cloned = wrapper.clone();
-        assert_eq!(wrapper, cloned);
-    }
+    test_clone!(passthrough_msg_clone, NoDropPass<'static, Msg, ()>, NoDropPass::<Msg, ()>::guard, ("message"));
 
     #[test]
     fn passthrough_msg_drop_no_panic() {

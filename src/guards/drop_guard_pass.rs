@@ -1,6 +1,10 @@
 use std::borrow::Cow;
 
-use crate::markers::{Empty, Msg, PassMarker};
+use crate::{
+    guards::GuardNotArmed,
+    markers::{Empty, Msg, PassMarker},
+    no_drop::{NoDropPassEmpty, NoDropPassMsg},
+};
 
 /// A zero-cost wrapper with no drop checking.
 ///
@@ -31,6 +35,15 @@ impl DropGuardPass<'static, Empty> {
     pub fn new_disarmed() -> Self {
         Self { armed: false, _lifetime: std::marker::PhantomData, _marker: std::marker::PhantomData }
     }
+
+    /// Consumes the guard, returning the inner [`NoDropPassEmpty`] if armed, or [`None`] if disarmed.
+    #[must_use]
+    pub fn into_guard(self) -> Option<NoDropPassEmpty> {
+        match self.armed {
+            true => Some(NoDropPassEmpty::new()),
+            false => None,
+        }
+    }
 }
 
 // Implementation for DropGuardPass<Msg> (message variant)
@@ -48,6 +61,15 @@ impl<'msg> DropGuardPass<'msg, Msg> {
     /// The message is immediately dropped and ignored, since this type never [`panic!`]s.
     pub fn new_disarmed<M: Into<Cow<'msg, str>>>(_msg: M) -> Self {
         Self { armed: false, _lifetime: std::marker::PhantomData, _marker: std::marker::PhantomData }
+    }
+
+    /// Consumes the guard, returning the inner [`NoDropPassMsg`] if armed, or [`None`] if disarmed.
+    #[must_use]
+    pub fn into_guard(self) -> Option<NoDropPassMsg<'msg>> {
+        match self.armed {
+            true => Some(NoDropPassMsg::guard("")),
+            false => None,
+        }
     }
 }
 
@@ -79,69 +101,68 @@ impl<M: PassMarker> DropGuardPass<'_, M> {
     }
 }
 
+impl From<NoDropPassEmpty> for DropGuardPass<'_, Empty> {
+    fn from(_: NoDropPassEmpty) -> Self {
+        Self { armed: true, _lifetime: std::marker::PhantomData, _marker: std::marker::PhantomData }
+    }
+}
+
+impl From<NoDropPassMsg<'_>> for DropGuardPass<'_, Msg> {
+    fn from(_: NoDropPassMsg<'_>) -> Self {
+        Self { armed: true, _lifetime: std::marker::PhantomData, _marker: std::marker::PhantomData }
+    }
+}
+
+impl TryFrom<DropGuardPass<'static, Empty>> for NoDropPassEmpty {
+    type Error = GuardNotArmed;
+
+    fn try_from(value: DropGuardPass<'static, Empty>) -> Result<Self, Self::Error> {
+        value.into_guard().ok_or(GuardNotArmed)
+    }
+}
+
+impl<'msg> TryFrom<DropGuardPass<'msg, Msg>> for NoDropPassMsg<'msg> {
+    type Error = GuardNotArmed;
+
+    fn try_from(value: DropGuardPass<'msg, Msg>) -> Result<Self, Self::Error> {
+        value.into_guard().ok_or(GuardNotArmed)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::guards::test_macros::{ctor, transition, try_from};
 
-    // Tests for Empty variant
-    #[test]
-    fn passthrough_empty_new_armed() {
-        let mut guard = DropGuardPass::<Empty>::new_armed();
-        assert!(guard.armed());
-        assert!(!guard.disarmed());
-        guard.disarm();
+    mod empty {
+        use super::*;
+
+        ctor!(new_armed, DropGuardPass::<Empty>::new_armed, (), armed_no_panic);
+        ctor!(new_disarmed, DropGuardPass::<Empty>::new_disarmed, (), disarmed);
+        ctor!(from, DropGuardPass::<Empty>::from, (NoDropPassEmpty::new()), armed_no_panic);
+
+        try_from!(try_from_armed, DropGuardPass::<Empty>::new_armed, (), NoDropPassEmpty, armed);
+        try_from!(try_from_disarmed, DropGuardPass::<Empty>::new_disarmed, (), NoDropPassEmpty, disarmed);
+
+        transition!(arm_when_disarmed, DropGuardPass::<Empty>::new_disarmed, (), arm, true, armed_no_panic);
+        transition!(arm_when_armed, DropGuardPass::<Empty>::new_armed, (), arm, false, armed_no_panic);
+        transition!(disarm_when_armed, DropGuardPass::<Empty>::new_armed, (), disarm, true, disarmed);
+        transition!(disarm_when_disarmed, DropGuardPass::<Empty>::new_disarmed, (), disarm, false, disarmed);
     }
 
-    #[test]
-    fn passthrough_empty_new_disarmed() {
-        let guard = DropGuardPass::<Empty>::new_disarmed();
-        assert!(guard.disarmed());
-        assert!(!guard.armed());
-    }
+    mod msg {
+        use super::*;
 
-    #[test]
-    fn passthrough_empty_arm_disarm() {
-        let mut guard = DropGuardPass::<Empty>::new_disarmed();
-        assert!(guard.arm());
-        assert!(guard.armed());
-        assert!(guard.disarm());
-        assert!(guard.disarmed());
-    }
+        ctor!(new_armed, DropGuardPass::<Msg>::new_armed, ("message"), armed_no_panic);
+        ctor!(new_disarmed, DropGuardPass::<Msg>::new_disarmed, ("message"), disarmed);
+        ctor!(from, DropGuardPass::<Msg>::from, (NoDropPassMsg::guard("message")), armed_no_panic);
 
-    #[test]
-    fn passthrough_empty_drop_no_panic() {
-        let guard = DropGuardPass::<Empty>::new_armed();
-        drop(guard); // No panic even when armed
-    }
+        try_from!(try_from_armed, DropGuardPass::<Msg>::new_armed, ("msg"), NoDropPassMsg, armed);
+        try_from!(try_from_disarmed, DropGuardPass::<Msg>::new_disarmed, ("msg"), NoDropPassMsg, disarmed);
 
-    // Tests for Msg variant
-    #[test]
-    fn passthrough_msg_new_armed() {
-        let mut guard = DropGuardPass::<Msg>::new_armed("message");
-        assert!(guard.armed());
-        assert!(!guard.disarmed());
-        guard.disarm();
-    }
-
-    #[test]
-    fn passthrough_msg_new_disarmed() {
-        let guard = DropGuardPass::<Msg>::new_disarmed("message");
-        assert!(guard.disarmed());
-        assert!(!guard.armed());
-    }
-
-    #[test]
-    fn passthrough_msg_arm_disarm() {
-        let mut guard = DropGuardPass::<Msg>::new_disarmed("message");
-        assert!(guard.arm());
-        assert!(guard.armed());
-        assert!(guard.disarm());
-        assert!(guard.disarmed());
-    }
-
-    #[test]
-    fn passthrough_msg_drop_no_panic() {
-        let guard = DropGuardPass::<Msg>::new_armed("should not panic");
-        drop(guard); // No panic even when armed
+        transition!(arm_when_disarmed, DropGuardPass::<Msg>::new_disarmed, ("test"), arm, true, armed_no_panic);
+        transition!(arm_when_armed, DropGuardPass::<Msg>::new_armed, ("test"), arm, false, armed_no_panic);
+        transition!(disarm_when_armed, DropGuardPass::<Msg>::new_armed, ("test"), disarm, true, disarmed);
+        transition!(disarm_when_disarmed, DropGuardPass::<Msg>::new_disarmed, ("test"), disarm, false, disarmed);
     }
 }
