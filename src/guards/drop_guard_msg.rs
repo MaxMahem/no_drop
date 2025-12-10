@@ -16,12 +16,16 @@ use crate::dbg::NoDropMsg;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DropGuardMsg<'msg>(DropGuardMsgState<'msg>);
 
-#[derive(Debug, Clone, PartialEq, Eq, derivative::Derivative)]
-#[derivative(Default)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum DropGuardMsgState<'msg> {
     Armed(NoDropMsg<'msg>),
-    #[derivative(Default)]
     Disarmed(Cow<'msg, str>),
+}
+
+impl Default for DropGuardMsgState<'_> {
+    fn default() -> Self {
+        Self::Disarmed(Cow::Borrowed(""))
+    }
 }
 
 impl<'msg> DropGuardMsg<'msg> {
@@ -97,6 +101,12 @@ mod tests {
         let guard = DropGuardMsg::new_disarmed("custom message");
         assert!(guard.disarmed());
         assert!(!guard.armed());
+    }
+
+    #[test]
+    fn default_is_disarmed() {
+        let state = DropGuardMsgState::default();
+        assert_eq!(state, DropGuardMsgState::Disarmed(Cow::Borrowed("")));
     }
 
     #[test]
