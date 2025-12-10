@@ -126,4 +126,14 @@ fn important_operation() {
 }
 ```
 
+For custom panic messages with drop guards, use `NoDropMsg::expect()`:
+
+```rust
+use no_drop::rls::NoDropMsg;
+
+let guard = NoDropMsg::expect("operation must complete");
+// ... do work ...
+guard.consume();
+```
+
 This is useful for ensuring that cleanup code runs or that certain operations complete fully.

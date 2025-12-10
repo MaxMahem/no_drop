@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `NoDropMsg::expect(message)` constructor for creating unit `NoDropMsg<()>` values with custom panic messages
+
 
 ## [0.2.0] - 2025-12-09
 

@@ -21,7 +21,7 @@ impl<T> IntoNoDropDbg for T {
     }
 
     fn no_drop_msg<'msg, M: Into<Cow<'msg, str>>>(self, msg: M) -> NoDropMsgPassthrough<'msg, Self> {
-        NoDropMsgPassthrough::wrap_msg(self, msg)
+        NoDropMsgPassthrough::wrap(self, msg)
     }
 }
 
@@ -43,6 +43,6 @@ impl<T> IntoNoDropRls for T {
     }
 
     fn no_drop_msg<'msg, M: Into<Cow<'msg, str>>>(self, msg: M) -> NoDropMsg<'msg, Self> {
-        NoDropMsg::wrap_msg(self, msg)
+        NoDropMsg::wrap(self, msg)
     }
 }
