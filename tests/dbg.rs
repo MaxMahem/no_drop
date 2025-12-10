@@ -2,7 +2,7 @@ use no_drop::dbg::*;
 
 #[test]
 fn dbg_consume_returns_value() {
-    let value = NoDrop::new(42);
+    let value = NoDrop::wrap(42);
     assert_eq!(value.consume(), 42);
 }
 
@@ -10,7 +10,7 @@ fn dbg_consume_returns_value() {
 #[cfg(debug_assertions)]
 #[should_panic(expected = "Value was dropped without being consumed")]
 fn dbg_panics_on_drop_in_debug() {
-    let _value = NoDrop::new(42);
+    let _value = NoDrop::wrap(42);
     // Should panic in debug mode
 }
 

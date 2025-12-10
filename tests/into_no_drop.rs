@@ -1,5 +1,5 @@
 mod dbg {
-    use no_drop::dbg::{Consume, IntoNoDrop};
+    use no_drop::dbg::IntoNoDrop;
 
     #[test]
     fn dbg_into_no_drop() {
@@ -9,7 +9,7 @@ mod dbg {
 }
 
 mod rls_tests {
-    use no_drop::rls::{Consume, IntoNoDrop};
+    use no_drop::rls::IntoNoDrop;
 
     #[test]
     fn rls_into_no_drop() {

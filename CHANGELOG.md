@@ -6,6 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-09
+
+### Added
+- `NoDrop::new()` for unit `NoDrop<()>` values, useful for creating empty drop guards for uses as fields in other structs
+
+### Changed
+- **Breaking**: Removed `Consume` trait entirely
+  - Implemented `wrap()`, `consume()`, and `forget()` methods directly on `NoDrop` and `NoDropPassthrough` types
+- **Breaking**: Removed `Consume` exports from `dbg` and `rls` modules
+- Added `#[must_use]` attribute to `NoDrop`
+- Added `#[inline]` attribute to `NoDrop::consume`
+
+### Migration Guide
+Replace `Consume` trait usage with direct method calls:
+- `Consume::new(value)` → `NoDrop::wrap(value)` or `NoDropPassthrough::wrap(value)`
+- `value.consume()` remains the same
+- `value.forget()` remains the same
+- Remove `use no_drop::{dbg,rls}::Consume` imports
+
+[0.2.0]: https://github.com/MaxMahem/no_drop/releases/tag/v0.2.0
+
+## [0.1.3] - 2025-12-09
+
+### Added
+- **Breaking**: Added `#[must_use]` attribute to `NoDrop` and `NoDropPassthrough` types
+- Added `forget()` method to `NoDrop` and `NoDropPassthrough` types
+
+### Changed
+- Removed the `Size` bound from the `Consume` trait
+- **Breaking**: Changed `Consume::new` to `Consume::wrap`
+
 ## [0.1.3] - 2025-12-09
 
 ### Added

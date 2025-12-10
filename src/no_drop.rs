@@ -1,40 +1,11 @@
 use std::mem::ManuallyDrop;
 use std::ptr;
 
-/// Trait for types that require explicit consumption before dropping.
-///
-/// This trait provides a safe interface for working with values that must be
-/// explicitly consumed via [`Consume::consume()`] rather than dropped implicitly.
-pub trait Consume: Sized {
-    /// The type of the inner value being wrapped.
-    type Inner;
-
-    /// Creates a new wrapper around `value`.
-    fn new(value: Self::Inner) -> Self;
-
-    /// Consumes the wrapper and returns the `Inner` value.
-    ///
-    /// This is the only safe way to extract the value from the wrapper.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use no_drop::dbg::{Consume, NoDrop};
-    ///
-    /// let wrapper = NoDrop::new(42);
-    /// assert_eq!(wrapper.consume(), 42);
-    /// ```
-    fn consume(self) -> Self::Inner;
-
-    /// Forgets the value, allowing it to be dropped.
-    fn forget(self);
-}
-
 /// A wrapper around a `T` value that always panics if dropped without being
-/// [`Consume::consume`]d.
+/// [`consume`](Self::consume)d.
 ///
 /// This type uses `unsafe` code to ensure the inner value is only extracted via
-/// [`Consume::consume`]. If dropped normally, it will [`panic!`].
+/// [`consume`](Self::consume). If dropped normally, it will [`panic!`].
 #[derive(
     PartialEq,
     Eq,
@@ -47,33 +18,59 @@ pub trait Consume: Sized {
     derive_more::AsMut,
     derive_more::AsRef,
 )]
-#[repr(transparent)]
+#[must_use]
 pub struct NoDrop<T>(T);
+
+impl<T> NoDrop<T> {
+    /// Creates a new wrapper around `value`.
+    pub fn wrap(value: T) -> Self {
+        Self(value)
+    }
+
+    /// Consumes the wrapper and returns the inner value.
+    ///
+    /// This is the only safe way to extract the value from the wrapper.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use no_drop::dbg::NoDrop;
+    ///
+    /// let wrapper = NoDrop::wrap(42);
+    /// assert_eq!(wrapper.consume(), 42);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub fn consume(self) -> T {
+        let this = ManuallyDrop::new(self);
+        unsafe { ptr::read(&raw const this.0) }
+    }
+
+    /// Forgets the value, allowing it to be dropped.
+    #[inline]
+    pub fn forget(self) {
+        let _ = ManuallyDrop::new(self);
+    }
+}
+
+impl NoDrop<()> {
+    /// Creates a new empty `NoDrop` value.
+    pub const fn new() -> Self {
+        Self(())
+    }
+}
+
+impl Default for NoDrop<()> {
+    fn default() -> Self {
+        Self(())
+    }
+}
 
 impl<T> Drop for NoDrop<T> {
     /// [`panic!`]s.
     #[track_caller]
     fn drop(&mut self) {
         panic!("Value was dropped without being consumed");
-    }
-}
-
-impl<T> Consume for NoDrop<T> {
-    type Inner = T;
-
-    fn new(value: T) -> Self {
-        Self(value)
-    }
-
-    #[inline]
-    fn consume(self) -> T {
-        let this = ManuallyDrop::new(self);
-        unsafe { ptr::read(&raw const this.0) }
-    }
-
-    #[inline]
-    fn forget(self) {
-        let _ = ManuallyDrop::new(self);
     }
 }
 
@@ -94,22 +91,41 @@ impl<T> Consume for NoDrop<T> {
     derive_more::AsRef,
 )]
 #[doc(hidden)]
-#[allow(dead_code)]
-#[repr(transparent)]
+#[must_use]
 pub struct NoDropPassthrough<T>(T);
 
-impl<T> Consume for NoDropPassthrough<T> {
-    type Inner = T;
-
-    fn new(value: T) -> Self {
+#[allow(dead_code)]
+impl<T> NoDropPassthrough<T> {
+    /// Creates a new wrapper around `value`.
+    pub fn wrap(value: T) -> Self {
         Self(value)
     }
 
-    fn consume(self) -> T {
+    /// Consumes the wrapper and returns the inner value.
+    #[inline]
+    #[must_use]
+    pub fn consume(self) -> T {
         self.0
     }
 
-    fn forget(self) {}
+    /// Forgets the value, allowing it to be dropped.
+    pub fn forget(self) {
+        drop(self);
+    }
+}
+
+#[allow(dead_code)]
+impl NoDropPassthrough<()> {
+    /// Creates a new empty `NoDropPassthrough` value.
+    pub const fn new() -> Self {
+        Self(())
+    }
+}
+
+impl Default for NoDropPassthrough<()> {
+    fn default() -> Self {
+        Self(())
+    }
 }
 
 /// Extension trait for wrapping values in a [`NoDropPassthrough`].
@@ -123,7 +139,7 @@ pub trait IntoNoDropDbg: Sized {
 
 impl<T> IntoNoDropDbg for T {
     fn no_drop(self) -> NoDropPassthrough<Self> {
-        NoDropPassthrough::new(self)
+        NoDropPassthrough::wrap(self)
     }
 }
 
@@ -138,7 +154,7 @@ pub trait IntoNoDropRls: Sized {
 
 impl<T> IntoNoDropRls for T {
     fn no_drop(self) -> NoDrop<Self> {
-        NoDrop::new(self)
+        NoDrop::wrap(self)
     }
 }
 
@@ -148,20 +164,20 @@ mod tests {
 
     #[test]
     fn no_drop() {
-        let wrapper = NoDrop::new(42);
+        let wrapper = NoDrop::wrap(42);
         assert_eq!(wrapper.consume(), 42);
     }
 
     #[test]
     #[should_panic(expected = "Value was dropped without being consumed")]
     fn no_drop_panics() {
-        let wrapper = NoDrop::new(42);
+        let wrapper = NoDrop::wrap(42);
         drop(wrapper);
     }
 
     #[test]
     fn no_drop_passthrough() {
-        let wrapper = NoDropPassthrough::new(42);
+        let wrapper = NoDropPassthrough::wrap(42);
         assert_eq!(wrapper.consume(), 42);
     }
 
@@ -179,13 +195,25 @@ mod tests {
 
     #[test]
     fn no_drop_forget() {
-        let wrapper = NoDrop::new(42);
+        let wrapper = NoDrop::wrap(42);
         wrapper.forget();
     }
 
     #[test]
     fn no_drop_passthrough_forget() {
-        let wrapper = NoDropPassthrough::new(42);
+        let wrapper = NoDropPassthrough::wrap(42);
         wrapper.forget();
+    }
+
+    #[test]
+    fn no_drop_passthrough_unit_new() {
+        let wrapper = NoDropPassthrough::new();
+        assert_eq!(wrapper.consume(), ());
+    }
+
+    #[test]
+    fn no_drop_passthrough_unit_default() {
+        let wrapper = NoDropPassthrough::default();
+        assert_eq!(wrapper.consume(), ());
     }
 }
