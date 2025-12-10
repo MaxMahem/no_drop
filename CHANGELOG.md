@@ -4,17 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-- `DropGuardMsg<'msg>` type for mutable drop guards with custom panic messages
-  - Supports dynamic arm/disarm operations via `arm()` and `disarm()` methods
-  - Retains panic message across state changes
-  - Available in both `dbg` and `rls` modules with conditional compilation support
-
 ## [0.2.0] - 2025-12-10
 
 ### Added
+- `DropGuard<'msg>` type for mutable drop guards with custom panic messages
+  - Supports dynamic arm/disarm operations via `arm()` and `disarm()` methods
+  - Retains panic message across state changes
+  - Available in both `dbg` and `rls` modules with conditional compilation support
+- `DropGuardEmpty` type for mutable drop guard with a default panic message.
+  - Same api as `DropGuard<'msg>` but with a default panic message.
+  - Available in both `dbg` and `rls` modules with conditional compilation support
 - `NoDrop::new()` for unit `NoDrop<()>` values, useful for creating empty drop guards for uses as fields in other structs
 - `NoDropMsg<'msg, T>` type with custom panic messages that supports both borrowed and owned messages via `Cow<'msg, str>`
 - `IntoNoDrop::expect_no_drop(msg)` allows creating `NoDropMsg` values with custom panic messages, similar to `IntoNoDrop::no_drop`
