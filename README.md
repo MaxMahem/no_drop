@@ -15,6 +15,7 @@ The primary use case is for double-checking logic during development, ensuring v
 - **Explicit Consumption**: Values wrapped in `NoDrop` must be explicitly consumed via the `consume()` method, preventing accidental drops
 - **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with panic checks only in debug mode
 - **Always-Checked Mode**: Use the `rls` module for panic checks in all build configurations
+- **Custom Messages**: Use the `NoDropMsg` variant to provide custom panic messages
 
 ## Usage
 
@@ -70,8 +71,8 @@ For more descriptive error messages, use `NoDropMsg` with custom panic messages:
 
 ```rust,no_run
 use no_drop::rls::NoDropMsg;
-
-let value = NoDropMsg::wrap_msg(42, "forgot to process the answer");
+// msg can be an owned or borrowed value
+let value = NoDropMsg::wrap(42, "forgot to process the answer");
 
 // This would panic with your custom message:
 drop(value); // panic: "forgot to process the answer"
@@ -82,58 +83,41 @@ To properly use the value:
 ```rust
 use no_drop::rls::NoDropMsg;
 
-let value = NoDropMsg::wrap_msg(42, "forgot to process the answer");
+let value = NoDropMsg::wrap(42, "forgot to process the answer");
 let inner = value.consume();
 assert_eq!(inner, 42);
 ```
 
-The message parameter accepts anything that converts into `Cow<'msg, str>`, so you can use static strings, owned `String`s, or even borrowed strings:
-
-```rust
-use no_drop::dbg::{NoDropMsg, IntoNoDrop};
-
-// Static string
-let value = 42.no_drop_msg("custom error");
-let _ = value.consume();
-
-// Owned String  
-let msg = format!("expected value: {}", 100);
-let value = NoDropMsg::wrap_msg(50, msg);
-let _ = value.consume();
-
-// Borrowed string (note: lifetime parameter is inferred)
-let msg_str = String::from("borrowed error");
-let value = NoDropMsg::wrap_msg(100, msg_str.as_str());
-let _ = value.consume();
-```
-
-
 ### Using as a Drop Guard
 
-`NoDrop` supports a unit type `()` instances, allowing you to use them as drop guards to ensure specific code paths are taken:
+`NoDrop` supports a unit type `()` instances, allowing you to use them as drop guards within another type, to ensure a specific method is called before the type is dropped. This can be useful to enforce a manual RAII pattern or to enforce a builder pattern.
 
 ```rust
 use no_drop::dbg::NoDrop;
 
-fn important_operation() {
-    let guard = NoDrop::new();  // or NoDrop::default()
-    
-    // Do important work here
-    // If this function returns early without consuming the guard,
-    // it will panic in debug builds
-    
-    guard.forget(); // Explicitly mark the operation as complete
+struct Transaction {
+    guard: NoDrop<()>,
+    other_data: i32,
 }
+
+impl Transaction {
+    fn new(x: i32) -> Self {
+        Self { guard: NoDrop::new(), other_data: x }
+    }
+
+    fn finalize(self) {
+        // do necessary finalization work
+        // Disarm the guard by consuming it
+        self.guard.forget();
+    }
+}
+
+let t = Transaction::new(10);
+// do work.
+t.finalize();
+// Dropping without calling `finalize()` would panic.
 ```
 
 For custom panic messages with drop guards, use `NoDropMsg::expect()`:
-
-```rust
-use no_drop::rls::NoDropMsg;
-
-let guard = NoDropMsg::expect("operation must complete");
-// ... do work ...
-guard.consume();
-```
 
 This is useful for ensuring that cleanup code runs or that certain operations complete fully.

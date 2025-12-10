@@ -1,11 +1,8 @@
 use std::mem::ManuallyDrop;
 use std::ptr;
 
-/// A wrapper around a `T` value that always panics if dropped without being
-/// [`consume`](Self::consume)d.
-///
-/// This type uses `unsafe` code to ensure the inner value is only extracted via
-/// [`consume`](Self::consume). If dropped normally, it will [`panic!`].
+/// A wrapper around a `T` value that always [`panic!`]s if dropped without being
+/// [`Self::consume`]d or [`Self::forget`].
 #[derive(
     PartialEq,
     Eq,
@@ -27,7 +24,7 @@ impl<T> NoDrop<T> {
         Self(value)
     }
 
-    /// Consumes the wrapper and returns the inner value.
+    /// Consumes the wrapper and returns the inner `T`.
     ///
     /// # Examples
     ///
@@ -41,10 +38,12 @@ impl<T> NoDrop<T> {
     #[must_use]
     pub fn consume(self) -> T {
         let this = ManuallyDrop::new(self);
+        // SAFETY: `T` is moved out of the wrapper exactly once, then this type is dropped.
+        // No uninitialized access can occur.
         unsafe { ptr::read(&raw const this.0) }
     }
 
-    /// Forgets the value, allowing it to be dropped.
+    /// Forgets this guard, safely dropping it.
     #[inline]
     pub fn forget(self) {
         let _ = ManuallyDrop::new(self);
@@ -52,7 +51,7 @@ impl<T> NoDrop<T> {
 }
 
 impl NoDrop<()> {
-    /// Creates a new empty [`NoDrop`] value.
+    /// Creates a new empty [`NoDrop`] guard.
     pub const fn new() -> Self {
         Self(())
     }
@@ -99,14 +98,14 @@ impl<T> NoDropPassthrough<T> {
         Self(value)
     }
 
-    /// Consumes the wrapper and returns the inner value.
+    /// Consumes the wrapper and returns the inner `T`.
     #[inline]
     #[must_use]
     pub fn consume(self) -> T {
         self.0
     }
 
-    /// Forgets the value, allowing it to be dropped.
+    /// Forgets this guard, safely dropping it.
     pub fn forget(self) {
         drop(self);
     }
@@ -114,7 +113,7 @@ impl<T> NoDropPassthrough<T> {
 
 #[allow(dead_code)]
 impl NoDropPassthrough<()> {
-    /// Creates a new empty `NoDropPassthrough` value.
+    /// Creates a new empty guard.
     pub const fn new() -> Self {
         Self(())
     }
