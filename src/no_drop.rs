@@ -5,9 +5,6 @@ use std::ptr;
 ///
 /// This trait provides a safe interface for working with values that must be
 /// explicitly consumed via [`Consume::consume()`] rather than dropped implicitly.
-///
-/// This trait is automatically in scope when you import a `NoDrop` type from
-/// either the `dbg` or `release` modules.
 pub trait Consume: Sized {
     /// The type of the inner value being wrapped.
     type Inner;
@@ -36,7 +33,16 @@ pub trait Consume: Sized {
 /// This type uses `unsafe` code to ensure the inner value is only extracted via
 /// [`Consume::consume`]. If dropped normally, it will [`panic!`].
 #[derive(
-    Debug, derive_more::Deref, derive_more::DerefMut, derive_more::AsMut, derive_more::AsRef,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Debug,
+    derive_more::Deref,
+    derive_more::DerefMut,
+    derive_more::AsMut,
+    derive_more::AsRef,
 )]
 #[repr(transparent)]
 pub struct NoDrop<T>(T);
@@ -68,7 +74,16 @@ impl<T> Consume for NoDrop<T> {
 /// This is a transparent no-op wrapper around the `T` value. It does not panic when
 /// dropped. Intended to be transparently substituted for [`NoDrop`] in release builds.
 #[derive(
-    Debug, derive_more::Deref, derive_more::DerefMut, derive_more::AsMut, derive_more::AsRef,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Debug,
+    derive_more::Deref,
+    derive_more::DerefMut,
+    derive_more::AsMut,
+    derive_more::AsRef,
 )]
 #[doc(hidden)]
 #[allow(dead_code)]

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `PartialEq`, `Eq`, `PartialOrd`, `Ord`, and `Hash` `derive` implementations for both `NoDrop` and `NoDropPassthrough` types.
+
 ## [0.1.2] - 2025-12-09
 
 ### Added
