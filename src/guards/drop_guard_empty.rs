@@ -9,9 +9,9 @@ use crate::no_drop::NoDrop;
 /// This can be used to guard a critical state or another type, ensuring it is not dropped while in
 /// that state.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DropGuard(Option<NoDrop<()>>);
+pub struct DropGuardEmpty(Option<NoDrop<()>>);
 
-impl DropGuard {
+impl DropGuardEmpty {
     /// Creates a new armed guard.
     #[must_use]
     pub fn new_armed() -> Self {
@@ -51,7 +51,7 @@ impl DropGuard {
     }
 }
 
-impl From<NoDrop<()>> for DropGuard {
+impl From<NoDrop<()>> for DropGuardEmpty {
     fn from(no_drop: NoDrop<()>) -> Self {
         Self(Some(no_drop))
     }
@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn new_armed() {
-        let mut guard = DropGuard::new_armed();
+        let mut guard = DropGuardEmpty::new_armed();
         assert!(guard.armed());
         assert!(!guard.disarmed());
         guard.disarm(); // Prevent panic on drop
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn new_disarmed() {
-        let guard = DropGuard::new_disarmed();
+        let guard = DropGuardEmpty::new_disarmed();
         assert!(guard.disarmed());
         assert!(!guard.armed());
     }
@@ -79,13 +79,13 @@ mod tests {
     #[test]
     fn from_no_drop() {
         let no_drop = NoDrop::new();
-        let mut guard = DropGuard::from(no_drop);
+        let mut guard = DropGuardEmpty::from(no_drop);
         guard.disarm();
     }
 
     #[test]
     fn arm_when_disarmed() {
-        let mut guard = DropGuard::new_disarmed();
+        let mut guard = DropGuardEmpty::new_disarmed();
         let changed = guard.arm();
         assert!(changed); // State changed: disarmed -> armed
         assert!(guard.armed());
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn arm_when_armed() {
-        let mut guard = DropGuard::new_armed();
+        let mut guard = DropGuardEmpty::new_armed();
         let changed = guard.arm();
         assert!(!changed); // No state change: armed -> armed
         assert!(guard.armed());
@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn disarm_when_armed() {
-        let mut guard = DropGuard::new_armed();
+        let mut guard = DropGuardEmpty::new_armed();
         let changed = guard.disarm();
         assert!(changed); // State changed: armed -> disarmed
         assert!(guard.disarmed());
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn disarm_when_disarmed() {
-        let mut guard = DropGuard::new_disarmed();
+        let mut guard = DropGuardEmpty::new_disarmed();
         let changed = guard.disarm();
         assert!(!changed); // No state change: disarmed -> disarmed
         assert!(guard.disarmed());
@@ -120,14 +120,14 @@ mod tests {
     // Test drop behavior
     #[test]
     fn drop_disarmed_no_panic() {
-        let guard = DropGuard::new_disarmed();
+        let guard = DropGuardEmpty::new_disarmed();
         drop(guard);
     }
 
     #[test]
     #[should_panic(expected = "Value was dropped without being consumed")]
     fn drop_armed_panics() {
-        let guard = DropGuard::new_armed();
+        let guard = DropGuardEmpty::new_armed();
         drop(guard);
     }
 }

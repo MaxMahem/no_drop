@@ -144,14 +144,14 @@ t.finalize();
 // Dropping without calling `finalize()` would panic with custom message.
 ```
 
-### Mutable Drop Guards (`DropGuard` and `DropGuardMsg`)
+### Mutable Drop Guards (`DropGuard` and `DropGuardEmpty`)
 
-For cases where you need to dynamically arm and disarm a guard, use `DropGuard` or `DropGuardMsg`:
+For cases where you need to dynamically arm and disarm a guard, use `DropGuard` or `DropGuardEmpty`:
 
 ```rust
-use no_drop::dbg::DropGuardMsg;
+use no_drop::dbg::DropGuard;
 
-let mut guard = DropGuardMsg::new_armed("critical section not exited properly");
+let mut guard = DropGuard::new_armed("critical section not exited properly");
 
 // Check state
 assert!(guard.armed());
