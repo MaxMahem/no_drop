@@ -14,23 +14,23 @@ A selection of guard types that guard against values being automatically dropped
 
 Wraps a value in a guard type to ensure it is explicitly consumed before the guard is dropped.
 
-- **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with panic checks only in debug mode
-- **Always-Checked Mode**: Use the `rls` module for panic checks in all build configurations
+- **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with drop checks only in debug mode
+- **Always-Checked Mode**: Use the `rls` module for drop checks in all build configurations
 - **Custom Messages**: Use the `NoDropMsg` variant to provide custom panic messages
 
 ### `DropGuard` and `DropGuardMsg`
 
 A mutable drop guard that can be dynamically armed and disarmed. 
 
-- **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with panic checks only in debug mode. Nearly zero-cost in release builds (one `bool`).
-- **Always-Checked Mode**: Use the `rls` module for panic checks in all build configurations
+- **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with drop checks only in debug mode. Nearly zero cost in release builds (one `bool`).
+- **Always-Checked Mode**: Use the `rls` module for drop checks in all build configurations
 - **Custom Messages**: Use the `DropGuardMsg` variant to provide custom panic messages
 
 ## Usage - `NoDrop` and `NoDropMsg`
 
 ### Debug-Only Protection (`dbg` module)
 
-The `dbg` module provides panic protection in debug builds while being a zero-cost wrapper in release builds:
+The `dbg` module provides panic protection in debug builds while being a zero cost wrapper in release builds:
 
 ```rust
 use no_drop::dbg::NoDrop;
@@ -97,7 +97,7 @@ assert_eq!(42, value.unwrap());
 
 ### Using as a Drop Guard
 
-`NoDrop` and `NoDropMsg` supports using a unit type `()` instances, allowing you to use them as drop guards within another type, to ensure a specific method is called before the type is dropped. This can be useful to enforce a manual RAII pattern or to enforce a builder pattern.
+`NoDrop` and `NoDropMsg` support using a unit type `()` instances, allowing you to use them as drop guards within another type, to ensure a specific method is called before the type is dropped. This can be useful to enforce a manual RAII pattern or to enforce a builder pattern.
 
 ```rust
 use no_drop::dbg::NoDrop;
@@ -155,7 +155,7 @@ t.finalize();
 
 ## Usage - `DropGuard` and `DropGuardMsg`
 
-Unlike `NoDrop` types which are consumed when unwrapped, **drop guards** can be dynamically armed and disarmed. This makes them ideal for protecting mutable state or critical sections that may be entered and exited multiple times.
+Unlike `NoDrop` types, which are consumed when unwrapped, `DropGuards` can be dynamically armed and disarmed. This makes them ideal for protecting mutable state or critical sections that may be entered and exited, possibly multiple times.
 
 ### `DropGuard` - Custom Messages
 
@@ -181,7 +181,7 @@ guard.disarm(); // Message is retained across arm/disarm cycles
 
 ### `DropGuardEmpty` - No Messages
 
-For cases where you don't need a custom panic message, use `DropGuardEmpty` which provides the same arm/disarm functionality with a default panic message
+For cases where you don't need a custom panic message, use `DropGuardEmpty`, which provides the same arm/disarm functionality with a default panic message
 
 ### Debug vs Release Variants
 
