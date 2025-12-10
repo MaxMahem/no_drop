@@ -19,7 +19,7 @@ use std::ptr;
     derive_more::AsRef,
 )]
 #[must_use]
-pub struct NoDrop<T>(T);
+pub struct NoDrop<T = ()>(T);
 
 impl<T> NoDrop<T> {
     /// Creates a new wrapper around `value`.
@@ -28,8 +28,6 @@ impl<T> NoDrop<T> {
     }
 
     /// Consumes the wrapper and returns the inner value.
-    ///
-    /// This is the only safe way to extract the value from the wrapper.
     ///
     /// # Examples
     ///
@@ -54,7 +52,7 @@ impl<T> NoDrop<T> {
 }
 
 impl NoDrop<()> {
-    /// Creates a new empty `NoDrop` value.
+    /// Creates a new empty [`NoDrop`] value.
     pub const fn new() -> Self {
         Self(())
     }
@@ -92,7 +90,7 @@ impl<T> Drop for NoDrop<T> {
 )]
 #[doc(hidden)]
 #[must_use]
-pub struct NoDropPassthrough<T>(T);
+pub struct NoDropPassthrough<T = ()>(T);
 
 #[allow(dead_code)]
 impl<T> NoDropPassthrough<T> {
@@ -128,59 +126,11 @@ impl Default for NoDropPassthrough<()> {
     }
 }
 
-/// Extension trait for wrapping values in a [`NoDropPassthrough`].
-///
-/// This is the "dbg" version that returns a zero-cost passthrough wrapper.
-#[allow(dead_code)]
-pub trait IntoNoDropDbg: Sized {
-    /// Wraps this value in a [`NoDropPassthrough`].
-    fn no_drop(self) -> NoDropPassthrough<Self>;
-}
-
-impl<T> IntoNoDropDbg for T {
-    fn no_drop(self) -> NoDropPassthrough<Self> {
-        NoDropPassthrough::wrap(self)
-    }
-}
-
-/// Extension trait for wrapping values in a [`NoDrop`].
-///
-/// This is the "rls" version that always returns a panicking wrapper.
-#[allow(dead_code)]
-pub trait IntoNoDropRls: Sized {
-    /// Wraps this value in a [`NoDrop`].
-    fn no_drop(self) -> NoDrop<Self>;
-}
-
-impl<T> IntoNoDropRls for T {
-    fn no_drop(self) -> NoDrop<Self> {
-        NoDrop::wrap(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    macro_rules! test_ctor {
-        ($test_name:ident, $ctor:expr, ($($params:tt)*), $expected:expr) => {
-            #[test]
-            fn $test_name() {
-                let wrapper = $ctor($($params)*);
-                assert_eq!(wrapper.consume(), $expected);
-            }
-        };
-    }
-
-    macro_rules! test_forget {
-        ($test_name:ident, $type:ty) => {
-            #[test]
-            fn $test_name() {
-                let wrapper = <$type>::wrap(42);
-                wrapper.forget();
-            }
-        };
-    }
+    use crate::into::{IntoNoDropDbg, IntoNoDropRls};
+    use crate::{test_ctor, test_forget};
 
     #[test]
     #[should_panic(expected = "Value was dropped without being consumed")]
@@ -198,6 +148,6 @@ mod tests {
     test_ctor!(no_drop_passthrough_new, NoDropPassthrough::new, (), ());
     test_ctor!(no_drop_passthrough_default, NoDropPassthrough::default, (), ());
 
-    test_forget!(no_drop_forget, NoDrop<i32>);
-    test_forget!(no_drop_passthrough_forget, NoDropPassthrough<i32>);
+    test_forget!(no_drop_forget, NoDrop::new, ());
+    test_forget!(no_drop_passthrough_forget, NoDropPassthrough::new, ());
 }

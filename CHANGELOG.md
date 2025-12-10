@@ -6,10 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 ## [0.2.0] - 2025-12-09
 
 ### Added
 - `NoDrop::new()` for unit `NoDrop<()>` values, useful for creating empty drop guards for uses as fields in other structs
+- `NoDropMsg<'msg, T>` type with custom panic messages that supports both borrowed and owned messages via `Cow<'msg, str>`
+- `NoDropMsg::wrap_msg(value, message)` constructor for creating wrappers with custom panic messages
+- `IntoNoDrop::no_drop_msg(message)` allows creating `NoDropMsg` values with custom panic messages, similar to `IntoNoDrop::no_drop`
 
 ### Changed
 - **Breaking**: Removed `Consume` trait entirely

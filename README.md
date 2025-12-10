@@ -64,6 +64,50 @@ assert_eq!(inner, "important data");
 // drop(value); // panic: "Value was dropped without being consumed"
 ```
 
+### Custom Panic Messages (`NoDropMsg`)
+
+For more descriptive error messages, use `NoDropMsg` with custom panic messages:
+
+```rust,no_run
+use no_drop::rls::NoDropMsg;
+
+let value = NoDropMsg::wrap_msg(42, "forgot to process the answer");
+
+// This would panic with your custom message:
+drop(value); // panic: "forgot to process the answer"
+```
+
+To properly use the value:
+
+```rust
+use no_drop::rls::NoDropMsg;
+
+let value = NoDropMsg::wrap_msg(42, "forgot to process the answer");
+let inner = value.consume();
+assert_eq!(inner, 42);
+```
+
+The message parameter accepts anything that converts into `Cow<'msg, str>`, so you can use static strings, owned `String`s, or even borrowed strings:
+
+```rust
+use no_drop::dbg::{NoDropMsg, IntoNoDrop};
+
+// Static string
+let value = 42.no_drop_msg("custom error");
+let _ = value.consume();
+
+// Owned String  
+let msg = format!("expected value: {}", 100);
+let value = NoDropMsg::wrap_msg(50, msg);
+let _ = value.consume();
+
+// Borrowed string (note: lifetime parameter is inferred)
+let msg_str = String::from("borrowed error");
+let value = NoDropMsg::wrap_msg(100, msg_str.as_str());
+let _ = value.consume();
+```
+
+
 ### Using as a Drop Guard
 
 `NoDrop` supports a unit type `()` instances, allowing you to use them as drop guards to ensure specific code paths are taken:

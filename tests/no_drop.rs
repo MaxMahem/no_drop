@@ -22,6 +22,12 @@ mod dbg {
         let _value = NoDrop::new(42);
         // Should not panic in release mode
     }
+
+    #[test]
+    fn no_drop_unit() {
+        let value = NoDrop::new();
+        value.forget();
+    }
 }
 
 mod rls {
@@ -47,5 +53,11 @@ mod rls {
     fn panics_on_drop_in_release() {
         let _value = NoDrop::new(42);
         // Should panic in release mode
+    }
+
+    #[test]
+    fn no_drop_unit() {
+        let value = NoDrop::new();
+        value.forget();
     }
 }
