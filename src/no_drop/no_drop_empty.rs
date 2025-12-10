@@ -30,9 +30,9 @@ impl<T> NoDropEmpty<T> {
     /// # Examples
     ///
     /// ```rust
-    /// use no_drop::rls::NoDropEmpty;
+    /// use no_drop::rls::NoDrop;
     ///
-    /// let wrapper = NoDropEmpty::wrap(42);
+    /// let wrapper = NoDrop::wrap(42);
     /// assert_eq!(wrapper.unwrap(), 42);
     /// ```
     #[inline]
