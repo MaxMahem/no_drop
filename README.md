@@ -74,7 +74,6 @@ use no_drop::rls::NoDropMsg;
 // msg can be an owned or borrowed value
 let value = NoDropMsg::wrap(42, "forgot to process the answer");
 
-// This would panic with your custom message:
 drop(value); // panic: "forgot to process the answer"
 ```
 
@@ -84,8 +83,7 @@ To properly use the value:
 use no_drop::rls::NoDropMsg;
 
 let value = NoDropMsg::wrap(42, "forgot to process the answer");
-let inner = value.consume();
-assert_eq!(inner, 42);
+assert_eq!(42, value.consume());
 ```
 
 ### Using as a Drop Guard
@@ -107,8 +105,7 @@ impl Transaction {
 
     fn finalize(self) {
         // do necessary finalization work
-        // Disarm the guard by consuming it
-        self.guard.forget();
+        self.guard.forget(); // Disarm the guard by consuming it
     }
 }
 
@@ -119,5 +116,3 @@ t.finalize();
 ```
 
 For custom panic messages with drop guards, use `NoDropMsg::expect()`:
-
-This is useful for ensuring that cleanup code runs or that certain operations complete fully.
