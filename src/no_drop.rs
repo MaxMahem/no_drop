@@ -25,6 +25,9 @@ pub trait Consume: Sized {
     /// assert_eq!(wrapper.consume(), 42);
     /// ```
     fn consume(self) -> Self::Inner;
+
+    /// Forgets the value, allowing it to be dropped.
+    fn forget(self);
 }
 
 /// A wrapper around a `T` value that always panics if dropped without being
@@ -67,6 +70,11 @@ impl<T> Consume for NoDrop<T> {
         let this = ManuallyDrop::new(self);
         unsafe { ptr::read(&raw const this.0) }
     }
+
+    #[inline]
+    fn forget(self) {
+        let _ = ManuallyDrop::new(self);
+    }
 }
 
 /// A zero-cost wrapper with no drop checking.
@@ -100,6 +108,8 @@ impl<T> Consume for NoDropPassthrough<T> {
     fn consume(self) -> T {
         self.0
     }
+
+    fn forget(self) {}
 }
 
 /// Extension trait for wrapping values in a [`NoDropPassthrough`].
@@ -163,7 +173,19 @@ mod tests {
 
     #[test]
     fn into_no_drop_rls_trait() {
-        let wrapper = IntoNoDropRls::no_drop("test".to_string());
-        assert_eq!(wrapper.consume(), "test");
+        let wrapper = IntoNoDropRls::no_drop(42);
+        assert_eq!(wrapper.consume(), 42);
+    }
+
+    #[test]
+    fn no_drop_forget() {
+        let wrapper = NoDrop::new(42);
+        wrapper.forget();
+    }
+
+    #[test]
+    fn no_drop_passthrough_forget() {
+        let wrapper = NoDropPassthrough::new(42);
+        wrapper.forget();
     }
 }

@@ -6,8 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-12-09
+
 ### Added
 - `PartialEq`, `Eq`, `PartialOrd`, `Ord`, and `Hash` `derive` implementations for both `NoDrop` and `NoDropPassthrough` types.
+- Added `Consume::forget` method allowing a `NoDrop` value to be dropped without consuming it
+
+[0.1.3]: https://github.com/MaxMahem/no_drop/releases/tag/v0.1.3
 
 ## [0.1.2] - 2025-12-09
 
