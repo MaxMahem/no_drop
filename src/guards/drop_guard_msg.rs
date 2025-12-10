@@ -8,9 +8,6 @@ use crate::{dbg::NoDropMsg, guards::GuardNotArmed};
 /// [`Self::arm`] and [`Self::disarm`], respectively. While [`Self::armed`] it will [`panic!`]
 /// with the custom message if dropped, when [`Self::disarmed`] it will not.
 ///
-/// The panic message is retained even when disarmed, allowing the guard to be rearmed with
-/// the same message.
-///
 /// This can be used to guard a critical state or another type, ensuring it is not dropped while in
 /// that state.
 #[derive(Debug, Clone, PartialEq, Eq)]

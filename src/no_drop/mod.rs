@@ -5,7 +5,9 @@ mod no_drop_empty;
 mod no_drop_msg;
 mod no_drop_pass;
 
-pub use no_drop_empty::{NoDropEmpty, DEFAULT_DROP_PANIC_MSG};
+pub use no_drop_empty::NoDropEmpty as NoDrop;
+pub(crate) use no_drop_empty::NoDropEmpty;
+pub use no_drop_empty::DEFAULT_DROP_PANIC_MSG;
 pub use no_drop_msg::NoDropMsg;
 
 // Type aliases for passthrough variants
