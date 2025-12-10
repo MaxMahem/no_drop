@@ -41,7 +41,7 @@ pub mod dbg {
     pub use crate::guards::DropGuardPassthroughEmpty as DropGuardEmpty;
 
     #[cfg(debug_assertions)]
-    pub use crate::guards::DropGuardMsg as DropGuard;
+    pub use crate::guards::DropGuard;
 
     #[cfg(not(debug_assertions))]
     pub use crate::guards::DropGuardPassthroughMsg as DropGuard;
@@ -62,5 +62,5 @@ pub mod rls {
 
     pub use crate::guards::DropGuardEmpty;
 
-    pub use crate::guards::DropGuardMsg as DropGuard;
+    pub use crate::guards::DropGuard;
 }

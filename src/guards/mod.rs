@@ -3,7 +3,7 @@ mod drop_guard_msg;
 mod drop_guard_pass;
 
 pub use drop_guard_empty::DropGuardEmpty;
-pub use drop_guard_msg::DropGuardMsg;
+pub use drop_guard_msg::DropGuardMsg as DropGuard;
 
 #[cfg(test)]
 mod test_macros;
