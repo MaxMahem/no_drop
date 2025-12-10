@@ -162,10 +162,24 @@ impl<T> IntoNoDropRls for T {
 mod tests {
     use super::*;
 
-    #[test]
-    fn no_drop() {
-        let wrapper = NoDrop::wrap(42);
-        assert_eq!(wrapper.consume(), 42);
+    macro_rules! test_ctor {
+        ($test_name:ident, $ctor:expr, ($($params:tt)*), $expected:expr) => {
+            #[test]
+            fn $test_name() {
+                let wrapper = $ctor($($params)*);
+                assert_eq!(wrapper.consume(), $expected);
+            }
+        };
+    }
+
+    macro_rules! test_forget {
+        ($test_name:ident, $type:ty) => {
+            #[test]
+            fn $test_name() {
+                let wrapper = <$type>::wrap(42);
+                wrapper.forget();
+            }
+        };
     }
 
     #[test]
@@ -175,45 +189,15 @@ mod tests {
         drop(wrapper);
     }
 
-    #[test]
-    fn no_drop_passthrough() {
-        let wrapper = NoDropPassthrough::wrap(42);
-        assert_eq!(wrapper.consume(), 42);
-    }
+    test_ctor!(no_drop, NoDrop::wrap, (42), 42);
+    test_ctor!(no_drop_passthrough, NoDropPassthrough::wrap, (42), 42);
+    test_ctor!(into_no_drop_dbg_trait, IntoNoDropDbg::no_drop, (42), 42);
+    test_ctor!(into_no_drop_rls_trait, IntoNoDropRls::no_drop, (42), 42);
+    test_ctor!(no_drop_new, NoDrop::new, (), ());
+    test_ctor!(no_drop_default, NoDrop::default, (), ());
+    test_ctor!(no_drop_passthrough_new, NoDropPassthrough::new, (), ());
+    test_ctor!(no_drop_passthrough_default, NoDropPassthrough::default, (), ());
 
-    #[test]
-    fn into_no_drop_dbg_trait() {
-        let wrapper = IntoNoDropDbg::no_drop(42);
-        assert_eq!(wrapper.consume(), 42);
-    }
-
-    #[test]
-    fn into_no_drop_rls_trait() {
-        let wrapper = IntoNoDropRls::no_drop(42);
-        assert_eq!(wrapper.consume(), 42);
-    }
-
-    #[test]
-    fn no_drop_forget() {
-        let wrapper = NoDrop::wrap(42);
-        wrapper.forget();
-    }
-
-    #[test]
-    fn no_drop_passthrough_forget() {
-        let wrapper = NoDropPassthrough::wrap(42);
-        wrapper.forget();
-    }
-
-    #[test]
-    fn no_drop_passthrough_unit_new() {
-        let wrapper = NoDropPassthrough::new();
-        assert_eq!(wrapper.consume(), ());
-    }
-
-    #[test]
-    fn no_drop_passthrough_unit_default() {
-        let wrapper = NoDropPassthrough::default();
-        assert_eq!(wrapper.consume(), ());
-    }
+    test_forget!(no_drop_forget, NoDrop<i32>);
+    test_forget!(no_drop_passthrough_forget, NoDropPassthrough<i32>);
 }
