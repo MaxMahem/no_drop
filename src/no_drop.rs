@@ -63,6 +63,12 @@ impl Default for NoDrop<()> {
     }
 }
 
+impl Clone for NoDrop<()> {
+    fn clone(&self) -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Drop for NoDrop<T> {
     /// [`panic!`]s.
     #[track_caller]
@@ -76,12 +82,12 @@ impl<T> Drop for NoDrop<T> {
 /// This is a transparent no-op wrapper around the `T` value. It does not panic when
 /// dropped. Intended to be transparently substituted for [`NoDrop`] in release builds.
 #[derive(
+    Debug,
     PartialEq,
     Eq,
     PartialOrd,
     Ord,
     Hash,
-    Debug,
     derive_more::Deref,
     derive_more::DerefMut,
     derive_more::AsMut,
@@ -125,11 +131,17 @@ impl Default for NoDropPassthrough<()> {
     }
 }
 
+impl Clone for NoDropPassthrough<()> {
+    fn clone(&self) -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::into::{IntoNoDropDbg, IntoNoDropRls};
-    use crate::{test_ctor, test_forget};
+    use crate::test_macros::{test_clone, test_ctor, test_forget};
 
     #[test]
     #[should_panic(expected = "Value was dropped without being consumed")]
@@ -146,6 +158,9 @@ mod tests {
     test_ctor!(no_drop_default, NoDrop::default, (), ());
     test_ctor!(no_drop_passthrough_new, NoDropPassthrough::new, (), ());
     test_ctor!(no_drop_passthrough_default, NoDropPassthrough::default, (), ());
+
+    test_clone!(no_drop_clone, NoDrop, NoDrop::new, ());
+    test_clone!(no_drop_passthrough_clone, NoDropPassthrough, NoDropPassthrough::new, ());
 
     test_forget!(no_drop_forget, NoDrop::new, ());
     test_forget!(no_drop_passthrough_forget, NoDropPassthrough::new, ());

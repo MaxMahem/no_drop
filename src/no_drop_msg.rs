@@ -77,6 +77,12 @@ impl<'msg> NoDropMsg<'msg, ()> {
     }
 }
 
+impl<'msg> Clone for NoDropMsg<'msg, ()> {
+    fn clone(&self) -> Self {
+        Self { value: (), msg: self.msg.clone() }
+    }
+}
+
 impl<'msg, T> Drop for NoDropMsg<'msg, T> {
     /// [`panic!`]s with `msg`.
     #[track_caller]
@@ -144,11 +150,17 @@ impl<'msg> NoDropMsgPassthrough<'msg, ()> {
     }
 }
 
+impl<'msg> Clone for NoDropMsgPassthrough<'msg, ()> {
+    fn clone(&self) -> Self {
+        Self { value: (), _lifetime: std::marker::PhantomData }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::into::{IntoNoDropDbg, IntoNoDropRls};
-    use crate::{test_ctor, test_forget};
+    use crate::test_macros::{test_clone, test_ctor, test_forget};
 
     #[test]
     #[should_panic(expected = "custom panic message")]
@@ -161,12 +173,15 @@ mod tests {
     test_ctor!(no_drop_msg_string, NoDropMsg::wrap, (42, String::from("owned message")), 42);
     test_ctor!(no_drop_msg_passthrough, NoDropMsgPassthrough::wrap, (42, "message"), 42);
 
-    test_ctor!(into_no_drop_msg_dbg_trait, IntoNoDropDbg::no_drop_msg, (42, "msg"), 42);
-    test_ctor!(into_no_drop_msg_rls_trait, IntoNoDropRls::no_drop_msg, (42, "msg"), 42);
+    test_ctor!(into_no_drop_msg_dbg_trait, IntoNoDropDbg::expect_no_drop, (42, "msg"), 42);
+    test_ctor!(into_no_drop_msg_rls_trait, IntoNoDropRls::expect_no_drop, (42, "msg"), 42);
 
     test_ctor!(no_drop_msg_expect_static_str, NoDropMsg::guard, ("expected message"), ());
     test_ctor!(no_drop_msg_expect_string, NoDropMsg::guard, (String::from("owned expected message")), ());
     test_ctor!(no_drop_msg_passthrough_expect, NoDropMsgPassthrough::guard, ("expected message"), ());
+
+    test_clone!(no_drop_clone, NoDropMsg, NoDropMsg::guard, ("custom message"));
+    test_clone!(no_drop_passthrough_clone, NoDropMsgPassthrough, NoDropMsgPassthrough::guard, ("custom message"));
 
     test_forget!(no_drop_msg_forget, NoDropMsg::wrap, (42, "custom message"));
     test_forget!(no_drop_msg_passthrough_forget, NoDropMsgPassthrough::wrap, (42, "custom message"));
