@@ -15,7 +15,7 @@ pub mod dbg {
     pub use crate::no_drop::DEFAULT_DROP_PANIC_MSG;
 
     #[cfg(debug_assertions)]
-    pub use crate::no_drop::NoDropEmpty;
+    pub use crate::no_drop::NoDrop;
 
     #[cfg(not(debug_assertions))]
     pub use crate::no_drop::NoDropPassEmpty as NoDropEmpty;
@@ -31,8 +31,6 @@ pub mod dbg {
 
     #[cfg(not(debug_assertions))]
     pub use crate::no_drop::NoDropPassMsg as NoDropMsg;
-
-    pub use NoDropEmpty as NoDrop;
 
     #[cfg(debug_assertions)]
     pub use crate::guards::DropGuardEmpty;
@@ -52,13 +50,11 @@ pub mod rls {
     pub use crate::guards::GuardNotArmed;
     pub use crate::no_drop::DEFAULT_DROP_PANIC_MSG;
 
-    pub use crate::no_drop::NoDropEmpty;
+    pub use crate::no_drop::NoDrop;
 
     pub use crate::into::IntoNoDropRls as IntoNoDrop;
 
     pub use crate::no_drop::NoDropMsg;
-
-    pub use NoDropEmpty as NoDrop;
 
     pub use crate::guards::DropGuardEmpty;
 
