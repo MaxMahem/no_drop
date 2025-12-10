@@ -2,6 +2,7 @@
 
 #[warn(clippy::pedantic)]
 #[warn(clippy::cargo)]
+#[allow(clippy::match_bool)]
 mod guards;
 mod into;
 mod markers;
@@ -10,6 +11,9 @@ mod no_drop;
 /// Module containing [`NoDrop`](no_drop::NoDropEmpty) and [`NoDropMsg`](no_drop::NoDropMsg)
 /// with debug-only panic behavior.
 pub mod dbg {
+    pub use crate::guards::GuardNotArmed;
+    pub use crate::no_drop::DEFAULT_DROP_PANIC_MSG;
+
     #[cfg(debug_assertions)]
     pub use crate::no_drop::NoDropEmpty;
 
@@ -45,6 +49,9 @@ pub mod dbg {
 
 /// Module containing [`NoDrop`](no_drop::NoDropEmpty) and [`NoDropMsg`](no_drop::NoDropMsg) with always-[`panic!`]ing behavior.
 pub mod rls {
+    pub use crate::guards::GuardNotArmed;
+    pub use crate::no_drop::DEFAULT_DROP_PANIC_MSG;
+
     pub use crate::no_drop::NoDropEmpty;
 
     pub use crate::into::IntoNoDropRls as IntoNoDrop;

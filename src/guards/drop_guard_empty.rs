@@ -1,4 +1,4 @@
-use crate::no_drop::NoDropEmpty;
+use crate::{guards::GuardNotArmed, no_drop::NoDropEmpty};
 
 /// A mutable drop guard.
 ///
@@ -49,6 +49,12 @@ impl DropGuardEmpty {
     pub fn disarm(&mut self) -> bool {
         self.0.take().map(NoDropEmpty::forget).is_some()
     }
+
+    /// Consumes the guard, returning the inner [`NoDropEmpty`] if armed, or [`None`] if disarmed.
+    #[must_use]
+    pub fn into_guard(self) -> Option<NoDropEmpty> {
+        self.0
+    }
 }
 
 impl From<NoDropEmpty> for DropGuardEmpty {
@@ -57,77 +63,29 @@ impl From<NoDropEmpty> for DropGuardEmpty {
     }
 }
 
+impl TryFrom<DropGuardEmpty> for NoDropEmpty {
+    type Error = GuardNotArmed;
+
+    fn try_from(value: DropGuardEmpty) -> Result<Self, Self::Error> {
+        value.into_guard().ok_or(GuardNotArmed)
+    }
+}
+
+#[rustfmt::skip]
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::guards::test_macros::{ctor, try_from, transition};
 
-    #[test]
-    fn new_armed() {
-        let mut guard = DropGuardEmpty::new_armed();
-        assert!(guard.armed());
-        assert!(!guard.disarmed());
-        guard.disarm(); // Prevent panic on drop
-    }
+    ctor!(new_armed, DropGuardEmpty::new_armed, (), armed, "Value was dropped without being unwrapped");
+    ctor!(new_disarmed, DropGuardEmpty::new_disarmed, (), disarmed);
+    ctor!(from_no_drop, DropGuardEmpty::from, (NoDropEmpty::new()), armed, "Value was dropped without being unwrapped");
 
-    #[test]
-    fn new_disarmed() {
-        let guard = DropGuardEmpty::new_disarmed();
-        assert!(guard.disarmed());
-        assert!(!guard.armed());
-    }
+    try_from!(try_from_armed, DropGuardEmpty::new_armed, (), NoDropEmpty, armed);
+    try_from!(try_from_disarmed, DropGuardEmpty::new_disarmed, (), NoDropEmpty, disarmed);
 
-    #[test]
-    fn from_no_drop() {
-        let no_drop = NoDropEmpty::new();
-        let mut guard = DropGuardEmpty::from(no_drop);
-        guard.disarm();
-    }
-
-    #[test]
-    fn arm_when_disarmed() {
-        let mut guard = DropGuardEmpty::new_disarmed();
-        let changed = guard.arm();
-        assert!(changed); // State changed: disarmed -> armed
-        assert!(guard.armed());
-        guard.disarm(); // Prevent panic on drop
-    }
-
-    #[test]
-    fn arm_when_armed() {
-        let mut guard = DropGuardEmpty::new_armed();
-        let changed = guard.arm();
-        assert!(!changed); // No state change: armed -> armed
-        assert!(guard.armed());
-        guard.disarm(); // Prevent panic on drop
-    }
-
-    #[test]
-    fn disarm_when_armed() {
-        let mut guard = DropGuardEmpty::new_armed();
-        let changed = guard.disarm();
-        assert!(changed); // State changed: armed -> disarmed
-        assert!(guard.disarmed());
-    }
-
-    #[test]
-    fn disarm_when_disarmed() {
-        let mut guard = DropGuardEmpty::new_disarmed();
-        let changed = guard.disarm();
-        assert!(!changed); // No state change: disarmed -> disarmed
-        assert!(guard.disarmed());
-    }
-
-    // Test drop behavior
-    #[test]
-    fn drop_disarmed_no_panic() {
-        let guard = DropGuardEmpty::new_disarmed();
-        drop(guard);
-    }
-
-    #[test]
-    #[should_panic(expected = "Value was dropped without being unwrapped")]
-    fn drop_armed_panics() {
-        let guard = DropGuardEmpty::new_armed();
-        drop(guard);
-    }
+    transition!(arm_when_disarmed, DropGuardEmpty::new_disarmed, (), arm, true, armed, "Value was dropped without being unwrapped");
+    transition!(arm_when_armed, DropGuardEmpty::new_armed, (), arm, false, armed, "Value was dropped without being unwrapped");
+    transition!(disarm_when_armed, DropGuardEmpty::new_armed, (), disarm, true, disarmed);
+    transition!(disarm_when_disarmed, DropGuardEmpty::new_disarmed, (), disarm, false, disarmed);
 }

@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::dbg::NoDropMsg;
+use crate::{dbg::NoDropMsg, guards::GuardNotArmed};
 
 /// A mutable drop guard with custom panic message.
 ///
@@ -82,78 +82,51 @@ impl<'msg> DropGuardMsg<'msg> {
             }
         }
     }
+
+    /// Consumes the guard, returning the inner [`NoDropMsg`] if armed, or [`None`] if disarmed.
+    #[must_use]
+    pub fn into_guard(self) -> Option<NoDropMsg<'msg>> {
+        match self.0 {
+            DropGuardMsgState::Armed(guard) => Some(guard),
+            DropGuardMsgState::Disarmed(_) => None,
+        }
+    }
+}
+
+impl<'msg> From<NoDropMsg<'msg>> for DropGuardMsg<'msg> {
+    fn from(no_drop: NoDropMsg<'msg>) -> Self {
+        Self(DropGuardMsgState::Armed(no_drop))
+    }
+}
+
+impl<'msg> TryFrom<DropGuardMsg<'msg>> for NoDropMsg<'msg> {
+    type Error = GuardNotArmed;
+
+    fn try_from(value: DropGuardMsg<'msg>) -> Result<Self, Self::Error> {
+        value.into_guard().ok_or(GuardNotArmed)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::guards::test_macros::{ctor, transition, try_from};
 
-    #[test]
-    fn new_armed() {
-        let mut guard = DropGuardMsg::new_armed("custom panic message");
-        assert!(guard.armed());
-        assert!(!guard.disarmed());
-        guard.disarm(); // Prevent panic on drop
-    }
+    ctor!(new_armed, DropGuardMsg::new_armed, ("custom panic message"), armed, "custom panic message");
+    ctor!(new_disarmed, DropGuardMsg::new_disarmed, ("custom message"), disarmed);
+    ctor!(from_no_drop, DropGuardMsg::from, (NoDropMsg::guard("custom")), armed, "custom");
 
-    #[test]
-    fn new_disarmed() {
-        let guard = DropGuardMsg::new_disarmed("custom message");
-        assert!(guard.disarmed());
-        assert!(!guard.armed());
-    }
+    try_from!(try_from_armed, DropGuardMsg::new_armed, ("message"), NoDropMsg, armed);
+    try_from!(try_from_disarmed, DropGuardMsg::new_disarmed, ("message"), NoDropMsg, disarmed);
+
+    transition!(arm_when_disarmed, DropGuardMsg::new_disarmed, ("test"), arm, true, armed, "test");
+    transition!(arm_when_armed, DropGuardMsg::new_armed, ("test"), arm, false, armed, "test");
+    transition!(disarm_when_armed, DropGuardMsg::new_armed, ("test"), disarm, true, disarmed);
+    transition!(disarm_when_disarmed, DropGuardMsg::new_disarmed, ("test"), disarm, false, disarmed);
 
     #[test]
     fn default_is_disarmed() {
         let state = DropGuardMsgState::default();
         assert_eq!(state, DropGuardMsgState::Disarmed(Cow::Borrowed("")));
-    }
-
-    #[test]
-    fn arm_when_disarmed() {
-        let mut guard = DropGuardMsg::new_disarmed("test message");
-        let changed = guard.arm();
-        assert!(changed); // State changed: disarmed -> armed
-        assert!(guard.armed());
-        guard.disarm(); // Prevent panic on drop
-    }
-
-    #[test]
-    fn arm_when_armed() {
-        let mut guard = DropGuardMsg::new_armed("test message");
-        let changed = guard.arm();
-        assert!(!changed); // No state change: armed -> armed
-        assert!(guard.armed());
-        guard.disarm(); // Prevent panic on drop
-    }
-
-    #[test]
-    fn disarm_when_armed() {
-        let mut guard = DropGuardMsg::new_armed("test message");
-        let changed = guard.disarm();
-        assert!(changed); // State changed: armed -> disarmed
-        assert!(guard.disarmed());
-    }
-
-    #[test]
-    fn disarm_when_disarmed() {
-        let guard = DropGuardMsg::new_disarmed("test message");
-        let mut guard_copy = guard.clone();
-        let changed = guard_copy.disarm();
-        assert!(!changed); // No state change: disarmed -> disarmed
-        assert!(guard_copy.disarmed());
-    }
-
-    #[test]
-    fn drop_disarmed_no_panic() {
-        let guard = DropGuardMsg::new_disarmed("should not panic");
-        drop(guard);
-    }
-
-    #[test]
-    #[should_panic(expected = "custom panic on drop")]
-    fn drop_armed_panics() {
-        let guard = DropGuardMsg::new_armed("custom panic on drop");
-        drop(guard);
     }
 }
