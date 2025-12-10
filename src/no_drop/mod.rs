@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test_macros;
+
 mod no_drop_empty;
 mod no_drop_msg;
 mod no_drop_pass;

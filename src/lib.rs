@@ -7,9 +7,6 @@ mod into;
 mod markers;
 mod no_drop;
 
-#[cfg(test)]
-mod test_macros;
-
 /// Module containing [`NoDrop`](no_drop::NoDropEmpty) and [`NoDropMsg`](no_drop::NoDropMsg)
 /// with debug-only panic behavior.
 pub mod dbg {
