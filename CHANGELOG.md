@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Minor changes to rexports.
+- Minor changes to re-exports.
 
 [0.2.2]: https://github.com/MaxMahem/no_drop/releases/tag/v0.2.2
 
