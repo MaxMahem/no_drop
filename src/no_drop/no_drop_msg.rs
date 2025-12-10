@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 use std::mem::ManuallyDrop;
-use std::ptr;
 
 /// A wrapper around a `T` `value` with a custom panic `msg` and will [`panic!`]s if dropped without being
-/// [`Self::consume`]d or [`Self::forget`].
+/// [`Self::unwrap`]ped or [`Self::forget`]ten.
 ///
 /// The lifetime parameter `'msg` allows borrowing the message, and most commonly will be `'static`.
 #[derive(
@@ -37,7 +36,7 @@ impl<'msg, T> NoDropMsg<'msg, T> {
     /// use no_drop::rls::NoDropMsg;
     ///
     /// let wrapper = NoDropMsg::wrap(42, "forgot to process this value");
-    /// assert_eq!(wrapper.consume(), 42);
+    /// assert_eq!(wrapper.unwrap(), 42);
     /// ```
     #[inline]
     pub fn wrap<M: Into<Cow<'msg, str>>>(value: T, msg: M) -> Self {
@@ -47,11 +46,11 @@ impl<'msg, T> NoDropMsg<'msg, T> {
     /// Consumes the wrapper and returns the inner `T`.
     #[inline]
     #[must_use]
-    pub fn consume(self) -> T {
+    pub fn unwrap(self) -> T {
         let this = ManuallyDrop::new(self);
         // SAFETY: `T` is moved out of the wrapper exactly once, then this is dropped.
         // No uninitialized access can occur.
-        unsafe { ptr::read(&raw const this.value) }
+        unsafe { std::ptr::read(&raw const this.value) }
     }
 
     /// Forgets this guard, safely dropping it.
@@ -81,7 +80,7 @@ impl<'msg> NoDropMsg<'msg, ()> {
         let this = ManuallyDrop::new(self);
         // SAFETY: `msg` is moved out of the wrapper exactly once, then this is dropped.
         // No uninitialized access can occur.
-        unsafe { ptr::read(&raw const this.msg) }
+        unsafe { std::ptr::read(&raw const this.msg) }
     }
 }
 
@@ -129,7 +128,7 @@ mod tests {
     fn no_drop_msg_borrowed() {
         let msg = String::from("borrowed message");
         let wrapper = NoDropMsg::wrap(42, msg.as_str());
-        assert_eq!(wrapper.consume(), 42);
+        assert_eq!(wrapper.unwrap(), 42);
     }
 
     #[test]

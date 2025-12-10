@@ -14,11 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DropGuardEmpty` type for mutable drop guard with a default panic message.
   - Same api as `DropGuard<'msg>` but with a default panic message.
   - Available in both `dbg` and `rls` modules with conditional compilation support
-- `NoDrop::new()` for unit `NoDrop<()>` values, useful for creating empty drop guards for uses as fields in other structs
+- `NoDrop::new()` for unit `NoDrop` values, useful for creating empty drop guards for uses as fields in other structs
 - `NoDropMsg<'msg, T>` type with custom panic messages that supports both borrowed and owned messages via `Cow<'msg, str>`
 - `IntoNoDrop::expect_no_drop(msg)` allows creating `NoDropMsg` values with custom panic messages, similar to `IntoNoDrop::no_drop`
-- Added `Clone` implementation for `NoDrop<()>`.
-- Added a mutable `DropGuard` type who's guard state can be changed after construction.
+- Added `Clone` implementation for `NoDrop`.
 
 ### Changed
 - **Breaking**: Removed `Consume` trait entirely
@@ -26,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking**: Removed `Consume` exports from `dbg` and `rls` modules
 - Added `#[must_use]` attribute to `NoDrop`
 - Added `#[inline]` attribute to `NoDrop::consume`
+- **Breaking**: Renamed `consume()` method to `unwrap()` across all types (`NoDrop`, `NoDropMsg`, `NoDropPass`)
+  - Updated panic messages from "Value was dropped without being consumed" to "Value was dropped without being unwrapped"
+  - This aligns the API more closely with Rust conventions (similar to `Option::unwrap()` and `Result::unwrap()`)
 
 ### Migration Guide
 Replace `Consume` trait usage with direct method calls:
@@ -33,6 +35,9 @@ Replace `Consume` trait usage with direct method calls:
 - `value.consume()` remains the same
 - `value.forget()` remains the same
 - Remove `use no_drop::{dbg,rls}::Consume` imports
+
+Replace `consume()` calls with `unwrap()`:
+- `value.consume()` → `value.unwrap()`
 
 [0.2.0]: https://github.com/MaxMahem/no_drop/releases/tag/v0.2.0
 

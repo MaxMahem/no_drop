@@ -125,7 +125,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Value was dropped without being consumed")]
+    #[should_panic(expected = "Value was dropped without being unwrapped")]
     fn drop_armed_panics() {
         let guard = DropGuardEmpty::new_armed();
         drop(guard);

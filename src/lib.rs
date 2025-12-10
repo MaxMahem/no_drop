@@ -10,11 +10,8 @@ mod no_drop;
 #[cfg(test)]
 mod test_macros;
 
-/// Module containing [`NoDrop`](no_drops::NoDropEmpty) and [`NoDropMsg`](no_drops::NoDropMsg)
+/// Module containing [`NoDrop`](no_drop::NoDropEmpty) and [`NoDropMsg`](no_drop::NoDropMsg)
 /// with debug-only panic behavior.
-///
-/// In debug builds, dropping without calling [`consume`](NoDropMsg::consume)
-/// on the value will [`panic!`]. In release builds, this is a zero-cost wrapper with no checks.
 pub mod dbg {
     #[cfg(debug_assertions)]
     pub use crate::no_drop::NoDropEmpty;
@@ -49,10 +46,7 @@ pub mod dbg {
     pub use crate::guards::DropGuardPassthroughMsg as DropGuard;
 }
 
-/// Module containing [`NoDrop`](no_drops::NoDropEmpty) and [`NoDropMsg`](no_drops::NoDropMsg) with always-[`panic!`]ing behavior.
-///
-/// In all builds (debug and release), dropping without calling [`consume`](NoDropMsg::consume) on
-/// the value will [`panic!`].
+/// Module containing [`NoDrop`](no_drop::NoDropEmpty) and [`NoDropMsg`](no_drop::NoDropMsg) with always-[`panic!`]ing behavior.
 pub mod rls {
     pub use crate::no_drop::NoDropEmpty;
 

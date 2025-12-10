@@ -45,7 +45,7 @@ impl<T> NoDropPass<'static, Empty, T> {
     /// Consumes the wrapper and returns the inner `T`.
     #[inline]
     #[must_use]
-    pub fn consume(self) -> T {
+    pub fn unwrap(self) -> T {
         self.value
     }
 
@@ -88,7 +88,7 @@ impl<'msg, T> NoDropPass<'msg, Msg, T> {
     /// Consumes the wrapper and returns the inner `T`.
     #[inline]
     #[must_use]
-    pub fn consume(self) -> T {
+    pub fn unwrap(self) -> T {
         self.value
     }
 
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn passthrough_empty_wrap_consume() {
         let wrapper = NoDropPass::<Empty, _>::wrap(42);
-        assert_eq!(wrapper.consume(), 42);
+        assert_eq!(wrapper.unwrap(), 42);
     }
 
     #[test]
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn passthrough_msg_wrap_consume() {
         let wrapper = NoDropPass::<Msg, _>::wrap(42, "message");
-        assert_eq!(wrapper.consume(), 42);
+        assert_eq!(wrapper.unwrap(), 42);
     }
 
     #[test]
@@ -192,6 +192,6 @@ mod tests {
     fn passthrough_msg_borrowed() {
         let msg = String::from("borrowed message");
         let wrapper = NoDropPass::<Msg, _>::wrap(42, msg.as_str());
-        assert_eq!(wrapper.consume(), 42);
+        assert_eq!(wrapper.unwrap(), 42);
     }
 }

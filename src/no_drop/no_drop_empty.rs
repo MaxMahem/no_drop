@@ -1,8 +1,7 @@
 use std::mem::ManuallyDrop;
-use std::ptr;
 
 /// A wrapper around a `T` value that always [`panic!`]s if dropped without being
-/// [`Self::consume`]d or [`Self::forget`].
+/// [`Self::unwrap`]ed or [`Self::forget`]ten.
 #[derive(
     PartialEq,
     Eq,
@@ -32,15 +31,15 @@ impl<T> NoDropEmpty<T> {
     /// use no_drop::rls::NoDropEmpty;
     ///
     /// let wrapper = NoDropEmpty::wrap(42);
-    /// assert_eq!(wrapper.consume(), 42);
+    /// assert_eq!(wrapper.unwrap(), 42);
     /// ```
     #[inline]
     #[must_use]
-    pub fn consume(self) -> T {
+    pub fn unwrap(self) -> T {
         let this = ManuallyDrop::new(self);
         // SAFETY: `T` is moved out of the wrapper exactly once, then this type is dropped.
         // No uninitialized access can occur.
-        unsafe { ptr::read(&raw const this.0) }
+        unsafe { std::ptr::read(&raw const this.0) }
     }
 
     /// Forgets this guard, safely dropping it.
@@ -73,7 +72,7 @@ impl<T> Drop for NoDropEmpty<T> {
     /// [`panic!`]s.
     #[track_caller]
     fn drop(&mut self) {
-        panic!("Value was dropped without being consumed");
+        panic!("Value was dropped without being unwrapped");
     }
 }
 
@@ -84,7 +83,7 @@ mod tests {
     use crate::test_macros::{test_clone, test_ctor, test_forget};
 
     #[test]
-    #[should_panic(expected = "Value was dropped without being consumed")]
+    #[should_panic(expected = "Value was dropped without being unwrapped")]
     fn no_drop_empty_panics() {
         let wrapper = NoDropEmpty::wrap(42);
         drop(wrapper);

@@ -5,12 +5,12 @@ mod dbg {
     #[test]
     fn consume_returns_value() {
         let value = NoDrop::wrap(42);
-        assert_eq!(value.consume(), 42);
+        assert_eq!(value.unwrap(), 42);
     }
 
     #[test]
     #[cfg(debug_assertions)]
-    #[should_panic(expected = "Value was dropped without being consumed")]
+    #[should_panic(expected = "Value was dropped without being unwrapped")]
     fn panics_on_drop_in_debug() {
         let _value = NoDrop::wrap(42);
         // Should panic in debug mode
@@ -36,12 +36,12 @@ mod rls {
     #[test]
     fn consume_returns_value() {
         let value = NoDrop::wrap(42);
-        assert_eq!(value.consume(), 42);
+        assert_eq!(value.unwrap(), 42);
     }
 
     #[test]
     #[cfg(debug_assertions)]
-    #[should_panic(expected = "Value was dropped without being consumed")]
+    #[should_panic(expected = "Value was dropped without being unwrapped")]
     fn panics_on_drop_in_debug() {
         let _value = NoDrop::wrap(42);
         // Should panic in debug mode
@@ -49,7 +49,7 @@ mod rls {
 
     #[test]
     #[cfg(not(debug_assertions))]
-    #[should_panic(expected = "Value was dropped without being consumed")]
+    #[should_panic(expected = "Value was dropped without being unwrapped")]
     fn panics_on_drop_in_release() {
         let _value = NoDrop::new(42);
         // Should panic in release mode

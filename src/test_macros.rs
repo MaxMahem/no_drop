@@ -5,7 +5,7 @@ macro_rules! test_ctor {
         #[test]
         fn $test_name() {
             let wrapper = $ctor($($params)*);
-            assert_eq!(wrapper.consume(), $expected);
+            assert_eq!(wrapper.unwrap(), $expected);
         }
     };
 }

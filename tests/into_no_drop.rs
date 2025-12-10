@@ -4,7 +4,7 @@ mod dbg {
     #[test]
     fn dbg_into_no_drop() {
         let wrapper = 42.no_drop();
-        assert_eq!(wrapper.consume(), 42);
+        assert_eq!(wrapper.unwrap(), 42);
     }
 }
 
@@ -14,6 +14,6 @@ mod rls_tests {
     #[test]
     fn rls_into_no_drop() {
         let wrapper = 42.no_drop();
-        assert_eq!(wrapper.consume(), 42);
+        assert_eq!(wrapper.unwrap(), 42);
     }
 }

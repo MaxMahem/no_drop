@@ -6,18 +6,27 @@
 [![codecov](https://codecov.io/github/MaxMahem/no_drop/graph/badge.svg?token=VqGfOfh0vp)](https://codecov.io/github/MaxMahem/no_drop)
 ![GitHub License](https://img.shields.io/github/license/MaxMahem/no_drop)
 
-A simple wrapper type that guards against values being automatically dropped, ensuring a value is explicitly consumed.
-
-The primary use case is for double-checking logic during development, ensuring values that are desired to be preserved/moved from are not accidentally dropped.
+A selection of guard types that guard against values being automatically dropped, ensuring a value is explicitly consumed.
 
 ## Features
 
-- **Explicit Consumption**: Values wrapped in `NoDrop` must be explicitly consumed via the `consume()` method, preventing accidental drops
+### `NoDrop` and `NoDropMsg`
+
+Wraps a value in a guard type to ensure it is explicitly consumed before the guard is dropped.
+
 - **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with panic checks only in debug mode
 - **Always-Checked Mode**: Use the `rls` module for panic checks in all build configurations
 - **Custom Messages**: Use the `NoDropMsg` variant to provide custom panic messages
 
-## Usage
+### `DropGuard` and `DropGuardMsg`
+
+A mutable drop guard that can be dynamically armed and disarmed. 
+
+- **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with panic checks only in debug mode. Nearly zero-cost in release builds (one `bool`).
+- **Always-Checked Mode**: Use the `rls` module for panic checks in all build configurations
+- **Custom Messages**: Use the `DropGuardMsg` variant to provide custom panic messages
+
+## Usage - `NoDrop` and `NoDropMsg`
 
 ### Debug-Only Protection (`dbg` module)
 
@@ -29,12 +38,12 @@ use no_drop::dbg::NoDrop;
 let value = NoDrop::wrap(42);
 
 // Extract the value safely
-let inner = value.consume();
+let inner = value.unwrap();
 assert_eq!(inner, 42);
 
 // This would panic in debug builds:
 // let value = NoDrop::wrap(42);
-// drop(value); // panic: "Value was dropped without being consumed"
+// drop(value); // panic: "Value was dropped without being unwrapped"
 ```
 
 Or use the convenient `.no_drop()` method via the `IntoNoDrop` trait:
@@ -43,7 +52,7 @@ Or use the convenient `.no_drop()` method via the `IntoNoDrop` trait:
 use no_drop::dbg::IntoNoDrop;
 
 let value = 42.no_drop();  // Wraps the value automatically
-let inner = value.consume();
+let inner = value.unwrap();
 assert_eq!(inner, 42);
 ```
 
@@ -57,12 +66,12 @@ use no_drop::rls::NoDrop;
 let value = NoDrop::wrap("important data");
 
 // Must consume the value
-let inner = value.consume();
+let inner = value.unwrap();
 assert_eq!(inner, "important data");
 
 // This would panic in ALL builds:
 // let value = NoDrop::wrap("data");
-// drop(value); // panic: "Value was dropped without being consumed"
+// drop(value); // panic: "Value was dropped without being unwrapped"
 ```
 
 ### Custom Panic Messages (`NoDropMsg`)
@@ -83,18 +92,18 @@ To properly use the value:
 use no_drop::rls::NoDropMsg;
 
 let value = NoDropMsg::wrap(42, "forgot to process the answer");
-assert_eq!(42, value.consume());
+assert_eq!(42, value.unwrap());
 ```
 
 ### Using as a Drop Guard
 
-`NoDrop` supports a unit type `()` instances, allowing you to use them as drop guards within another type, to ensure a specific method is called before the type is dropped. This can be useful to enforce a manual RAII pattern or to enforce a builder pattern.
+`NoDrop` and `NoDropMsg` supports using a unit type `()` instances, allowing you to use them as drop guards within another type, to ensure a specific method is called before the type is dropped. This can be useful to enforce a manual RAII pattern or to enforce a builder pattern.
 
 ```rust
 use no_drop::dbg::NoDrop;
 
 struct Transaction {
-    guard: NoDrop<()>,
+    guard: NoDrop,
     other_data: i32,
 }
 
@@ -144,9 +153,13 @@ t.finalize();
 // Dropping without calling `finalize()` would panic with custom message.
 ```
 
-### Mutable Drop Guards (`DropGuard` and `DropGuardEmpty`)
+## Usage - `DropGuard` and `DropGuardMsg`
 
-For cases where you need to dynamically arm and disarm a guard, use `DropGuard` or `DropGuardEmpty`:
+Unlike `NoDrop` types which are consumed when unwrapped, **drop guards** can be dynamically armed and disarmed. This makes them ideal for protecting mutable state or critical sections that may be entered and exited multiple times.
+
+### `DropGuard` - Custom Messages
+
+`DropGuard` (an alias for `DropGuardMsg`) provides custom panic messages and can be toggled between armed and disarmed states:
 
 ```rust
 use no_drop::dbg::DropGuard;
@@ -156,11 +169,34 @@ let mut guard = DropGuard::new_armed("critical section not exited properly");
 // Check state
 assert!(guard.armed());
 
+// do work...
+
 // Safely exit critical section
 guard.disarm();
 
 // Can rearm if needed
 guard.arm();
 guard.disarm(); // Message is retained across arm/disarm cycles
+```
+
+### `DropGuardEmpty` - No Messages
+
+For cases where you don't need a custom panic message, use `DropGuardEmpty` which provides the same arm/disarm functionality with a default panic message
+
+### Debug vs Release Variants
+
+Both `DropGuard` and `DropGuardEmpty` have debug-only and always-panicking variants:
+
+- **`dbg` module**: Nearly zero-cost in release builds (one `bool`), panics only in debug mode
+- **`rls` module**: Always panics in both debug and release builds
+
+```rust
+// Debug-only guard (zero-cost in release)
+use no_drop::dbg::DropGuard;
+let mut guard = DropGuard::new_disarmed("debug only");
+
+// Always-panicking guard (checks in all builds)
+use no_drop::rls::DropGuard as DropGuardRls;
+let mut guard = DropGuardRls::new_disarmed("always checked");
 ```
 
