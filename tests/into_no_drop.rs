@@ -1,19 +1,19 @@
 mod dbg {
-    use no_drop::dbg::{Consume, IntoNoDrop};
+    use no_drop::dbg::IntoNoDrop;
 
     #[test]
     fn dbg_into_no_drop() {
         let wrapper = 42.no_drop();
-        assert_eq!(wrapper.consume(), 42);
+        assert_eq!(wrapper.unwrap(), 42);
     }
 }
 
 mod rls_tests {
-    use no_drop::rls::{Consume, IntoNoDrop};
+    use no_drop::rls::IntoNoDrop;
 
     #[test]
     fn rls_into_no_drop() {
         let wrapper = 42.no_drop();
-        assert_eq!(wrapper.consume(), 42);
+        assert_eq!(wrapper.unwrap(), 42);
     }
 }
