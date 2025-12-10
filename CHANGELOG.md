@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `DropGuardMsg<'msg>` type for mutable drop guards with custom panic messages
+  - Supports dynamic arm/disarm operations via `arm()` and `disarm()` methods
+  - Retains panic message across state changes
+  - Available in both `dbg` and `rls` modules with conditional compilation support
+
 ## [0.2.0] - 2025-12-10
 
 ### Added

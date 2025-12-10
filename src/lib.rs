@@ -3,6 +3,7 @@
 #[warn(clippy::pedantic)]
 #[warn(clippy::cargo)]
 mod drop_guard;
+mod drop_guard_msg;
 mod into;
 mod no_drop;
 mod no_drop_msg;
@@ -34,6 +35,12 @@ pub mod dbg {
     pub use crate::no_drop_msg::NoDropMsgPassthrough as NoDropMsg;
 
     pub use crate::drop_guard::DropGuard;
+
+    #[cfg(debug_assertions)]
+    pub use crate::drop_guard_msg::DropGuardMsg;
+
+    #[cfg(not(debug_assertions))]
+    pub use crate::drop_guard_msg::DropGuardMsgPassthrough as DropGuardMsg;
 }
 
 /// Module containing [`NoDrop`](no_drop::NoDrop) and [`NoDropMsg`](no_drop_msg::NoDropMsg) with always-[`panic!`]ing behavior.
@@ -48,4 +55,6 @@ pub mod rls {
     pub use crate::no_drop_msg::NoDropMsg;
 
     pub use crate::drop_guard::DropGuard;
+
+    pub use crate::drop_guard_msg::DropGuardMsg;
 }

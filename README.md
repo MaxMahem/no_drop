@@ -115,4 +115,52 @@ t.finalize();
 // Dropping without calling `finalize()` would panic.
 ```
 
-For custom panic messages with drop guards, use `NoDropMsg::expect()`:
+For custom panic messages with drop guards, use `NoDropMsg::guard()`:
+
+```rust
+use no_drop::dbg::NoDropMsg;
+
+struct Transaction {
+    guard: NoDropMsg<'static, ()>,
+    other_data: i32,
+}
+
+impl Transaction {
+    fn new(x: i32) -> Self {
+        Self { 
+            guard: NoDropMsg::guard("Transaction was dropped without being finalized"), 
+            other_data: x 
+        }
+    }
+
+    fn finalize(self) {
+        // do necessary finalization work
+        self.guard.forget(); // Disarm the guard
+    }
+}
+
+let t = Transaction::new(10);
+t.finalize();
+// Dropping without calling `finalize()` would panic with custom message.
+```
+
+### Mutable Drop Guards (`DropGuard` and `DropGuardMsg`)
+
+For cases where you need to dynamically arm and disarm a guard, use `DropGuard` or `DropGuardMsg`:
+
+```rust
+use no_drop::dbg::DropGuardMsg;
+
+let mut guard = DropGuardMsg::new_armed("critical section not exited properly");
+
+// Check state
+assert!(guard.armed());
+
+// Safely exit critical section
+guard.disarm();
+
+// Can rearm if needed
+guard.arm();
+guard.disarm(); // Message is retained across arm/disarm cycles
+```
+

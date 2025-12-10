@@ -75,6 +75,14 @@ impl<'msg> NoDropMsg<'msg, ()> {
     pub fn guard<M: Into<Cow<'msg, str>>>(msg: M) -> Self {
         Self { value: (), msg: msg.into() }
     }
+
+    /// Consumes the guard and returns the inner panic message.
+    pub(crate) fn unwrap_msg(self) -> Cow<'msg, str> {
+        let this = ManuallyDrop::new(self);
+        // SAFETY: `msg` is moved out of the wrapper exactly once, then this is dropped.
+        // No uninitialized access can occur.
+        unsafe { ptr::read(&raw const this.msg) }
+    }
 }
 
 impl<'msg> Clone for NoDropMsg<'msg, ()> {
