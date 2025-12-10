@@ -7,6 +7,6 @@ pub use drop_guard_msg::DropGuardMsg;
 
 // Type aliases for passthrough variants
 #[allow(dead_code)]
-pub(crate) type DropGuardPassthroughEmpty = drop_guard_pass::DropGuardPass<'static, drop_guard_pass::Empty>;
+pub(crate) type DropGuardPassthroughEmpty = drop_guard_pass::DropGuardPass<'static, crate::markers::Empty>;
 #[allow(dead_code)]
-pub(crate) type DropGuardPassthroughMsg<'msg> = drop_guard_pass::DropGuardPass<'msg, drop_guard_pass::Msg>;
+pub(crate) type DropGuardPassthroughMsg<'msg> = drop_guard_pass::DropGuardPass<'msg, crate::markers::Msg>;

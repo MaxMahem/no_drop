@@ -99,71 +99,6 @@ impl<'msg, T> Drop for NoDropMsg<'msg, T> {
     }
 }
 
-/// A zero-cost wrapper with no drop checking.
-///
-/// This is a transparent no-op wrapper around the `T` value. It does not [`panic!`] when
-/// dropped. Intended to be transparently substituted for [`NoDropMsg`] in release builds.
-#[derive(
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Debug,
-    derive_more::Deref,
-    derive_more::DerefMut,
-    derive_more::AsMut,
-    derive_more::AsRef,
-)]
-#[doc(hidden)]
-#[must_use]
-pub struct NoDropMsgPassthrough<'msg, T = ()> {
-    #[deref]
-    #[deref_mut]
-    #[as_mut]
-    #[as_ref]
-    value: T,
-    _lifetime: std::marker::PhantomData<&'msg ()>,
-}
-
-#[allow(dead_code)]
-impl<'msg, T> NoDropMsgPassthrough<'msg, T> {
-    /// Creates a new wrapper around `value` with a custom [`panic!`] `msg`.
-    ///
-    /// `msg` is immediatly dropped and ignored, since this type never [`panic!`]s.
-    pub fn wrap<M: Into<Cow<'msg, str>>>(value: T, _msg: M) -> Self {
-        Self { value, _lifetime: std::marker::PhantomData }
-    }
-
-    /// Consumes the wrapper and returns the inner `T`.
-    #[inline]
-    #[must_use]
-    pub fn consume(self) -> T {
-        self.value
-    }
-
-    /// Forgets this guard, safely dropping it.
-    pub fn forget(self) {
-        drop(self);
-    }
-}
-
-#[allow(dead_code)]
-impl<'msg> NoDropMsgPassthrough<'msg, ()> {
-    /// Creates a new empty no drop guard, with a custom [`panic!`] `msg`.
-    ///
-    /// `msg` is immediatly dropped and ignored, since this type never [`panic!`]s.
-    pub fn guard<M: Into<Cow<'msg, str>>>(_msg: M) -> Self {
-        Self { value: (), _lifetime: std::marker::PhantomData }
-    }
-}
-
-impl<'msg> Clone for NoDropMsgPassthrough<'msg, ()> {
-    fn clone(&self) -> Self {
-        Self { value: (), _lifetime: std::marker::PhantomData }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -179,20 +114,16 @@ mod tests {
 
     test_ctor!(no_drop_msg_static_str, NoDropMsg::wrap, (42, "custom message"), 42);
     test_ctor!(no_drop_msg_string, NoDropMsg::wrap, (42, String::from("owned message")), 42);
-    test_ctor!(no_drop_msg_passthrough, NoDropMsgPassthrough::wrap, (42, "message"), 42);
 
     test_ctor!(into_no_drop_msg_dbg_trait, IntoNoDropDbg::expect_no_drop, (42, "msg"), 42);
     test_ctor!(into_no_drop_msg_rls_trait, IntoNoDropRls::expect_no_drop, (42, "msg"), 42);
 
     test_ctor!(no_drop_msg_expect_static_str, NoDropMsg::guard, ("expected message"), ());
     test_ctor!(no_drop_msg_expect_string, NoDropMsg::guard, (String::from("owned expected message")), ());
-    test_ctor!(no_drop_msg_passthrough_expect, NoDropMsgPassthrough::guard, ("expected message"), ());
 
     test_clone!(no_drop_clone, NoDropMsg, NoDropMsg::guard, ("custom message"));
-    test_clone!(no_drop_passthrough_clone, NoDropMsgPassthrough, NoDropMsgPassthrough::guard, ("custom message"));
 
     test_forget!(no_drop_msg_forget, NoDropMsg::wrap, (42, "custom message"));
-    test_forget!(no_drop_msg_passthrough_forget, NoDropMsgPassthrough::wrap, (42, "custom message"));
 
     #[test]
     fn no_drop_msg_borrowed() {

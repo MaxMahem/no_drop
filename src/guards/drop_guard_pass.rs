@@ -1,12 +1,6 @@
 use std::borrow::Cow;
 
-/// Marker type for [`DropGuardPass`] without custom message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Empty;
-
-/// Marker type for [`DropGuardPass`] with custom message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Msg;
+use crate::markers::{Empty, Msg, PassMarker};
 
 /// A zero-cost wrapper with no drop checking.
 ///
@@ -19,7 +13,7 @@ pub struct Msg;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[doc(hidden)]
 #[must_use]
-pub struct DropGuardPass<'msg, M = Empty> {
+pub struct DropGuardPass<'msg, M: PassMarker = Empty> {
     armed: bool,
     _lifetime: std::marker::PhantomData<&'msg ()>,
     _marker: std::marker::PhantomData<M>,
@@ -59,7 +53,7 @@ impl<'msg> DropGuardPass<'msg, Msg> {
 
 // Shared implementation for both variants
 #[allow(dead_code)]
-impl<M> DropGuardPass<'_, M> {
+impl<M: PassMarker> DropGuardPass<'_, M> {
     /// Returns whether the guard is armed.
     pub fn armed(&self) -> bool {
         self.armed

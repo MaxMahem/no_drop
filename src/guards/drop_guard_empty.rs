@@ -1,4 +1,4 @@
-use crate::no_drop::NoDrop;
+use crate::no_drop::NoDropEmpty;
 
 /// A mutable drop guard.
 ///
@@ -9,13 +9,13 @@ use crate::no_drop::NoDrop;
 /// This can be used to guard a critical state or another type, ensuring it is not dropped while in
 /// that state.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DropGuardEmpty(Option<NoDrop<()>>);
+pub struct DropGuardEmpty(Option<NoDropEmpty>);
 
 impl DropGuardEmpty {
     /// Creates a new armed guard.
     #[must_use]
     pub fn new_armed() -> Self {
-        Self(Some(NoDrop::new()))
+        Self(Some(NoDropEmpty::new()))
     }
 
     /// Creates a new disarmed guard.
@@ -40,19 +40,19 @@ impl DropGuardEmpty {
     ///
     /// Returns `true` if the guard was armed, or `false` if it was already armed.
     pub fn arm(&mut self) -> bool {
-        self.0.replace(NoDrop::new()).map(NoDrop::forget).is_none()
+        self.0.replace(NoDropEmpty::new()).map(NoDropEmpty::forget).is_none()
     }
 
     /// Disarms the guard.
     ///
     /// Returns `true` if the guard was disarmed or `false` if it was already disarmed.
     pub fn disarm(&mut self) -> bool {
-        self.0.take().map(NoDrop::forget).is_some()
+        self.0.take().map(NoDropEmpty::forget).is_some()
     }
 }
 
-impl From<NoDrop<()>> for DropGuardEmpty {
-    fn from(no_drop: NoDrop<()>) -> Self {
+impl From<NoDropEmpty> for DropGuardEmpty {
+    fn from(no_drop: NoDropEmpty) -> Self {
         Self(Some(no_drop))
     }
 }
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn from_no_drop() {
-        let no_drop = NoDrop::new();
+        let no_drop = NoDropEmpty::new();
         let mut guard = DropGuardEmpty::from(no_drop);
         guard.disarm();
     }
