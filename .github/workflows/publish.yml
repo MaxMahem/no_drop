@@ -1,19 +1,15 @@
 name: Publish
-
 on:
   workflow_dispatch:
-
 jobs:
-
-  publish-cargo:
-    name: Publishing to Cargo
+  publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write     # Required for OIDC token exchange
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo publish
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    - uses: actions/checkout@v6
+    - uses: rust-lang/crates-io-auth-action@v1
+      id: auth
+    - run: cargo publish
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
