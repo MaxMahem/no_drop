@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use crate::{
     guards::GuardNotArmed,
     markers::{Empty, Msg, PassMarker},
-    no_drop::{NoDropPassEmpty, NoDropPassMsg},
+    wrap::{NoDropPassEmpty, NoDropPassMsg},
 };
 
 /// A zero-cost wrapper with no drop checking.
@@ -27,18 +27,18 @@ pub struct DropGuardPass<'msg, M: PassMarker = Empty> {
 #[allow(dead_code)]
 impl DropGuardPass<'static, Empty> {
     /// Creates a new armed guard.
-    pub fn new_armed() -> Self {
+    pub const fn new_armed() -> Self {
         Self { armed: true, _lifetime: std::marker::PhantomData, _marker: std::marker::PhantomData }
     }
 
     /// Creates a new disarmed guard.
-    pub fn new_disarmed() -> Self {
+    pub const fn new_disarmed() -> Self {
         Self { armed: false, _lifetime: std::marker::PhantomData, _marker: std::marker::PhantomData }
     }
 
     /// Consumes the guard, returning the inner [`NoDropPassEmpty`] if armed, or [`None`] if disarmed.
     #[must_use]
-    pub fn into_guard(self) -> Option<NoDropPassEmpty> {
+    pub const fn into_guard(self) -> Option<NoDropPassEmpty> {
         match self.armed {
             true => Some(NoDropPassEmpty::new()),
             false => None,
@@ -77,26 +77,26 @@ impl<'msg> DropGuardPass<'msg, Msg> {
 #[allow(dead_code)]
 impl<M: PassMarker> DropGuardPass<'_, M> {
     /// Returns whether the guard is armed.
-    pub fn armed(&self) -> bool {
+    pub const fn armed(&self) -> bool {
         self.armed
     }
 
     /// Returns whether the guard is disarmed.
-    pub fn disarmed(&self) -> bool {
+    pub const fn disarmed(&self) -> bool {
         !self.armed
     }
 
     /// Arms the guard.
     ///
     /// Returns `true` if the guard was armed, or `false` if it was already armed.
-    pub fn arm(&mut self) -> bool {
+    pub const fn arm(&mut self) -> bool {
         !std::mem::replace(&mut self.armed, true)
     }
 
     /// Disarms the guard.
     ///
     /// Returns `true` if the guard was disarmed or `false` if it was already disarmed.
-    pub fn disarm(&mut self) -> bool {
+    pub const fn disarm(&mut self) -> bool {
         std::mem::replace(&mut self.armed, false)
     }
 }

@@ -117,7 +117,7 @@ impl<'msg> Clone for NoDropPass<'msg, Msg, ()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::no_drop::test_macros::{test_clone, test_ctor, test_forget};
+    use crate::wrap::test_macros::{test_clone, test_ctor, test_forget};
 
     // Tests for Empty variant
     test_ctor!(passthrough_empty_wrap_consume, NoDropPass::<Empty, _>::wrap, (42), 42);

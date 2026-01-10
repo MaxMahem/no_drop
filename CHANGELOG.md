@@ -1,8 +1,32 @@
+<!-- Markdownlint-disable no-duplicate-heading -->
+
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.2.4] - 2026-01-09
+
+### Changed
+
+- Specified MSRV as 1.85.1
+- Made the following methods `const`:
+  - `DropGuardEmpty`: `new()`, `wrap()`, `is_armed()`
+  - `DropGuardMsg`: `wrap()`, `is_armed()`
+  - `DropGuardPass`: `new()`, `wrap()`, `is_armed()`, `guard()`
+
+### Fixed
+
+- Fixed benchmark compilation error where `dbg::NoDrop` was unavailable in release mode
+- Renamed internal `no_drop` module to `wrap` and made it public (with `#[doc(hidden)]`) to allow benchmarks to access both debug and release variants
+
+### Added
+
+- Added verification benchmarks.
 
 ## [0.2.3] - 2025-12-17
 
@@ -65,12 +89,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration Guide
 
 Replace `Consume` trait usage with direct method calls:
+
 - `Consume::new(value)` → `NoDrop::wrap(value)` or `NoDropPassthrough::wrap(value)`
 - `value.consume()` remains the same
 - `value.forget()` remains the same
 - Remove `use no_drop::{dbg,rls}::Consume` imports
 
 Replace `consume()` calls with `unwrap()`:
+
 - `value.consume()` → `value.unwrap()`
 
 [0.2.0]: https://github.com/MaxMahem/no_drop/releases/tag/v0.2.0

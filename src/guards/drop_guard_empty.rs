@@ -1,4 +1,4 @@
-use crate::{guards::GuardNotArmed, no_drop::NoDropEmpty};
+use crate::{guards::GuardNotArmed, wrap::NoDropEmpty};
 
 /// A mutable drop guard.
 ///
@@ -14,25 +14,25 @@ pub struct DropGuardEmpty(Option<NoDropEmpty>);
 impl DropGuardEmpty {
     /// Creates a new armed guard.
     #[must_use]
-    pub fn new_armed() -> Self {
+    pub const fn new_armed() -> Self {
         Self(Some(NoDropEmpty::new()))
     }
 
     /// Creates a new disarmed guard.
     #[must_use]
-    pub fn new_disarmed() -> Self {
+    pub const fn new_disarmed() -> Self {
         Self(None)
     }
 
     /// Returns whether the guard is armed.
     #[must_use]
-    pub fn armed(&self) -> bool {
+    pub const fn armed(&self) -> bool {
         self.0.is_some()
     }
 
     /// Returns whether the guard is disarmed.
     #[must_use]
-    pub fn disarmed(&self) -> bool {
+    pub const fn disarmed(&self) -> bool {
         self.0.is_none()
     }
 

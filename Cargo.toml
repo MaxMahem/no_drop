@@ -1,7 +1,8 @@
 [package]
 name = "no_drop"
-version = "0.2.3"
-edition = "2021"
+version = "0.2.4"
+edition = "2024"
+rust-version = "1.85.1"
 description = "A simple wrapper type that guards against a value being automatically dropped."
 repository = "https://github.com/MaxMahem/no_drop"
 documentation = "https://MaxMahem.github.io/no_drop/index.html"
@@ -9,7 +10,7 @@ homepage = "https://github.com/MaxMahem/no_drop"
 keywords = ["drop", "guard", "memory", "safety", "wrapper"]
 categories = ["rust-patterns", "memory-management"]
 license = "MIT OR Apache-2.0"
-authors = [ "Austin Stanley <MaxTMahem@gmail.com>" ]
+authors = ["Austin Stanley <MaxTMahem@gmail.com>"]
 readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -18,3 +19,10 @@ readme = "README.md"
 derive_more = { version = "2.1.0", features = ["as_ref", "deref", "deref_mut"] }
 sealed = "0.6.0"
 thiserror = "2.0.17"
+
+[dev-dependencies]
+criterion = "0.8.1"
+
+[[bench]]
+name = "zero_cost"
+harness = false

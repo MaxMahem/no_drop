@@ -11,5 +11,5 @@ pub use no_drop_empty::DEFAULT_DROP_PANIC_MSG;
 pub use no_drop_msg::NoDropMsg;
 
 // Type aliases for passthrough variants
-pub(crate) type NoDropPassEmpty<T = ()> = no_drop_pass::NoDropPass<'static, crate::markers::Empty, T>;
-pub(crate) type NoDropPassMsg<'msg, T = ()> = no_drop_pass::NoDropPass<'msg, crate::markers::Msg, T>;
+pub type NoDropPassEmpty<T = ()> = no_drop_pass::NoDropPass<'static, crate::markers::Empty, T>;
+pub type NoDropPassMsg<'msg, T = ()> = no_drop_pass::NoDropPass<'msg, crate::markers::Msg, T>;

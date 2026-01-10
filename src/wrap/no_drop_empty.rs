@@ -1,5 +1,6 @@
 use std::mem::ManuallyDrop;
 
+/// Default panic message for [`NoDropEmpty`]
 pub const DEFAULT_DROP_PANIC_MSG: &str = "Value was dropped without being unwrapped";
 
 /// A wrapper around a `T` value that always [`panic!`]s if dropped without being
@@ -82,7 +83,7 @@ impl<T> Drop for NoDropEmpty<T> {
 mod tests {
     use super::*;
     use crate::into::{IntoNoDropDbg, IntoNoDropRls};
-    use crate::no_drop::test_macros::{test_clone, test_ctor, test_forget};
+    use crate::wrap::test_macros::{test_clone, test_ctor, test_forget};
 
     #[test]
     #[should_panic(expected = "Value was dropped without being unwrapped")]

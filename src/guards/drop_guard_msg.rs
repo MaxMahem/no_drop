@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{dbg::NoDropMsg, guards::GuardNotArmed};
+use crate::{guards::GuardNotArmed, wrap::NoDropMsg};
 
 /// A mutable drop guard with custom panic message.
 ///
@@ -42,13 +42,13 @@ impl<'msg> DropGuardMsg<'msg> {
 
     /// Returns whether the guard is armed.
     #[must_use]
-    pub fn armed(&self) -> bool {
+    pub const fn armed(&self) -> bool {
         matches!(self.0, DropGuardMsgState::Armed(_))
     }
 
     /// Returns whether the guard is disarmed.
     #[must_use]
-    pub fn disarmed(&self) -> bool {
+    pub const fn disarmed(&self) -> bool {
         matches!(self.0, DropGuardMsgState::Disarmed(_))
     }
 

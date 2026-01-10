@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::no_drop::{NoDropEmpty, NoDropMsg, NoDropPassEmpty, NoDropPassMsg};
+use crate::wrap::{NoDropEmpty, NoDropMsg, NoDropPassEmpty, NoDropPassMsg};
 
 /// Extension trait for wrapping values in [`NoDropPassEmpty`] or [`NoDropPassMsg`].
 ///
