@@ -7,25 +7,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-01-11
 
 ### Changed
 
+- **Breaking** - Renamed `new()` to `guard()` for empty guard constructors:
+  - `NoDropEmpty::new()` → `NoDropEmpty::guard()`
+  - `NoDropNoOpEmpty::new()` → `NoDropNoOpEmpty::guard()`
 - **Breaking** - Renamed marker types and traits:
   - `PassMarker` trait renamed to `MsgMarker`
   - `Empty` marker type renamed to `NoMsg`
 - **Breaking** - Replaced `DEFAULT_DROP_PANIC_MSG` module constant with type-associated constants
   - Removed public `DEFAULT_DROP_PANIC_MSG` export from `dbg` and `rls` modules
   - Added `PANIC_MSG` as a public associated constant on Empty variant types:
-    - `NoDropEmpty::PANIC_MSG`
-    - `no_drop_pass_empty::NoDropPass::PANIC_MSG`
+    - `NoDrop::PANIC_MSG`
     - `DropGuardEmpty::PANIC_MSG`
-    - `DropGuardPass<Empty>::PANIC_MSG`
+  - Added `PANIC_MSG` as a public associated constant on Message variant types:
+    - `NoDropMsg::PANIC_MSG`
+    - `DropGuardMsg::PANIC_MSG`
 - Specified MSRV as 1.85.1
 - Made the following methods `const`:
-  - `DropGuardEmpty`: `new()`, `wrap()`, `armed()`, `disarmed()`
-  - `DropGuardMsg`: `wrap()`, `armed()`, `disarmed()`
-  - `DropGuardPass`: `new()`, `wrap()`, `armed()`, `disarmed()`, `guard()`
+  - `DropGuardEmpty`: `guard()`, `wrap()`, `armed()`, `disarmed()`
+  - `DropGuardMsg`: `guard()`, `wrap()`, `armed()`, `disarmed()`
+  - `DropGuardPass`: `guard()`, `wrap()`, `armed()`, `disarmed()`
 
 ### Fixed
 

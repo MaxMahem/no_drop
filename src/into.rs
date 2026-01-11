@@ -5,7 +5,6 @@ use crate::wrap::{NoDropEmpty, NoDropMsg, NoDropNoOpEmpty, NoDropNoOpMsg};
 /// Extension trait for wrapping values in [`NoDropNoOpEmpty`] or [`NoDropNoOpMsg`].
 ///
 /// This is the "dbg" version that returns zero-cost no_op wrappers.
-#[allow(dead_code)]
 pub trait IntoNoDropDbg: Sized {
     /// Wraps this value in a [`NoDropNoOpEmpty`].
     fn no_drop(self) -> NoDropNoOpEmpty<Self>;
@@ -27,7 +26,6 @@ impl<T> IntoNoDropDbg for T {
 /// Extension trait for wrapping values in [`NoDropEmpty`] or [`NoDropMsg`].
 ///
 /// This is the "rls" version that always returns panicking wrappers.
-#[allow(dead_code)]
 pub trait IntoNoDropRls: Sized {
     /// Wraps this value in a [`NoDropEmpty`].
     fn no_drop(self) -> NoDropEmpty<Self>;

@@ -110,7 +110,7 @@ struct Transaction {
 
 impl Transaction {
     fn new(x: i32) -> Self {
-        Self { guard: NoDrop::new(), other_data: x }
+        Self { guard: NoDrop::guard(), other_data: x }
     }
 
     fn finalize(self) {

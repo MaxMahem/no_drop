@@ -7,14 +7,14 @@ use sealed::sealed;
 pub trait MsgMarker {}
 
 /// Marker type for passthrough types without custom message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct NoMsg;
 
 #[sealed]
 impl MsgMarker for NoMsg {}
 
 /// Marker type for passthrough types with custom message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Msg;
 
 #[sealed]

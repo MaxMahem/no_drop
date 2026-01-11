@@ -37,7 +37,7 @@ mod drop_guard_empty {
 
     guard_ctor!(new_armed, DropGuardEmpty::new_armed(), armed);
     guard_ctor!(new_disarmed, DropGuardEmpty::new_disarmed(), disarmed);
-    guard_ctor!(from_no_drop, DropGuardEmpty::from(NoDropEmpty::new()), armed);
+    guard_ctor!(from_no_drop, DropGuardEmpty::from(NoDropEmpty::guard()), armed);
 
     try_from!(try_from_armed, DropGuardEmpty::new_armed(), NoDropEmpty, armed);
     try_from!(try_from_disarmed, DropGuardEmpty::new_disarmed(), NoDropEmpty, disarmed);
@@ -56,7 +56,7 @@ mod drop_guard_no_op_empty {
 
     guard_ctor!(new_armed, DropGuardNoOp::<NoMsg>::new_armed(), armed_no_panic);
     guard_ctor!(new_disarmed, DropGuardNoOp::<NoMsg>::new_disarmed(), disarmed);
-    guard_ctor!(from, DropGuardNoOp::<NoMsg>::from(NoDropNoOpEmpty::new()), armed_no_panic);
+    guard_ctor!(from, DropGuardNoOp::<NoMsg>::from(NoDropNoOpEmpty::guard()), armed_no_panic);
 
     try_from!(try_from_armed, DropGuardNoOp::<NoMsg>::new_armed(), NoDropNoOpEmpty, armed);
     try_from!(try_from_disarmed, DropGuardNoOp::<NoMsg>::new_disarmed(), NoDropNoOpEmpty, disarmed);

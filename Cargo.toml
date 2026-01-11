@@ -1,6 +1,6 @@
 [package]
 name = "no_drop"
-version = "0.2.4"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.85.1"
 description = "A simple wrapper type that guards against a value being automatically dropped."

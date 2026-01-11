@@ -4,12 +4,14 @@ use std::mem::ManuallyDrop;
 /// A wrapper around a `T` value that always [`panic!`]s if dropped without being
 /// [`Self::unwrap`]ed or [`Self::forget`]ten.
 #[derive(
+    Debug,
+    Default,
+    Clone,
     PartialEq,
     Eq,
     PartialOrd,
     Ord,
     Hash,
-    Debug,
     derive_more::Deref,
     derive_more::DerefMut,
     derive_more::AsMut,
@@ -19,7 +21,7 @@ use std::mem::ManuallyDrop;
 pub struct NoDropEmpty<T = ()>(T);
 
 impl<T> NoDropEmpty<T> {
-    /// Default panic message used when the value is dropped without being unwrapped.
+    /// Panic message used when dropped without being [`Self::unwrap`]ed or [`Self::forget`]ten.
     pub const PANIC_MSG: &'static str = DEFAULT_DROP_PANIC_MSG;
 
     /// Creates a new wrapper around `value`.
@@ -55,20 +57,8 @@ impl<T> NoDropEmpty<T> {
 
 impl NoDropEmpty<()> {
     /// Creates a new empty [`NoDropEmpty`] guard.
-    pub const fn new() -> Self {
+    pub const fn guard() -> Self {
         Self(())
-    }
-}
-
-impl Default for NoDropEmpty<()> {
-    fn default() -> Self {
-        Self(())
-    }
-}
-
-impl Clone for NoDropEmpty<()> {
-    fn clone(&self) -> Self {
-        Self::new()
     }
 }
 

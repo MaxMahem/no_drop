@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::convert::TryFrom;
+use std::marker::PhantomData;
 
 use crate::DEFAULT_DROP_PANIC_MSG;
 use crate::guards::{GuardNotArmed, GuardState};
@@ -17,79 +18,14 @@ use crate::wrap::{NoDropNoOpEmpty, NoDropNoOpMsg};
 #[must_use]
 pub struct DropGuardNoOp<'msg, M: MsgMarker = NoMsg> {
     state: GuardState,
-    _lifetime: std::marker::PhantomData<&'msg ()>,
-    _marker: std::marker::PhantomData<M>,
-}
-
-// Implementation for DropGuardNoOp<Empty> (no message variant)
-#[allow(dead_code)]
-impl DropGuardNoOp<'static, NoMsg> {
-    /// Default panic message that would be used if this type panicked (it doesn't).
-    pub const PANIC_MSG: &'static str = DEFAULT_DROP_PANIC_MSG;
-
-    /// Creates a new armed guard.
-    pub const fn new_armed() -> Self {
-        Self::new(GuardState::Armed)
-    }
-
-    /// Creates a new disarmed guard.
-    pub const fn new_disarmed() -> Self {
-        Self::new(GuardState::Disarmed)
-    }
-
-    /// Consumes the guard, returning the inner [`NoDropNoOpEmpty`] if armed, or [`None`] if disarmed.
-    #[must_use]
-    pub const fn into_guard(self) -> Option<NoDropNoOpEmpty> {
-        match self.state {
-            GuardState::Armed => Some(NoDropNoOpEmpty::new()),
-            GuardState::Disarmed => None,
-        }
-    }
-}
-
-// Implementation for DropGuardNoOp<Msg> (message variant)
-#[allow(dead_code)]
-impl<'msg> DropGuardNoOp<'msg, Msg> {
-    /// Creates a new armed guard with a custom panic message.
-    ///
-    /// The message is immediately dropped and ignored, since this type never [`panic!`]s.
-    pub fn new_armed<M: Into<Cow<'msg, str>>>(_msg: M) -> Self {
-        Self::new(GuardState::Armed)
-    }
-
-    /// Creates a new disarmed guard with a custom panic message.
-    ///
-    /// The message is immediately dropped and ignored, since this type never [`panic!`]s.
-    pub fn new_disarmed<M: Into<Cow<'msg, str>>>(_msg: M) -> Self {
-        Self::new(GuardState::Disarmed)
-    }
-
-    /// Consumes the guard, returning the inner [`NoDropNoOpMsg`] if armed, or [`None`] if disarmed.
-    #[must_use]
-    #[allow(clippy::missing_const_for_fn, reason = "API consistency with other guard types")]
-    pub fn into_guard(self) -> Option<NoDropNoOpMsg<'msg>> {
-        match self.state {
-            GuardState::Armed => Some(NoDropNoOpMsg::new(())),
-            GuardState::Disarmed => None,
-        }
-    }
-
-    /// Sets a new panic message, preserving the armed/disarmed state.
-    ///
-    /// This method is a no-op for this type, since it never panics. The message is immediately
-    /// dropped and ignored.
-    pub fn set_msg<M: Into<Cow<'msg, str>>>(self, _msg: M) -> Self {
-        self
-    }
+    _lifetime: PhantomData<&'msg ()>,
+    _marker: PhantomData<M>,
 }
 
 // Shared implementation for both variants
-#[allow(dead_code)]
 impl<M: MsgMarker> DropGuardNoOp<'_, M> {
-    /// Internal constructor for guards.
-    pub(crate) const fn new(state: GuardState) -> Self {
-        Self { state, _lifetime: std::marker::PhantomData, _marker: std::marker::PhantomData }
-    }
+    const ARMED: Self = Self { state: GuardState::Armed, _lifetime: PhantomData, _marker: PhantomData };
+    const DISARMED: Self = Self { state: GuardState::Disarmed, _lifetime: PhantomData, _marker: PhantomData };
 
     /// Returns whether the guard is armed.
     #[must_use]
@@ -144,15 +80,75 @@ impl<M: MsgMarker> DropGuardNoOp<'_, M> {
     }
 }
 
+// Implementation for DropGuardNoOp<Empty> (no message variant)
+impl DropGuardNoOp<'static, NoMsg> {
+    /// Default panic message that would be used if this type panicked (it doesn't).
+    pub const PANIC_MSG: &'static str = DEFAULT_DROP_PANIC_MSG;
+
+    /// Creates a new armed guard.
+    pub const fn new_armed() -> Self {
+        Self::ARMED
+    }
+
+    /// Creates a new disarmed guard.
+    pub const fn new_disarmed() -> Self {
+        Self::DISARMED
+    }
+
+    /// Consumes the guard, returning the inner [`NoDropNoOpEmpty`] if armed, or [`None`] if disarmed.
+    #[must_use]
+    pub const fn into_guard(self) -> Option<NoDropNoOpEmpty> {
+        match self.state {
+            GuardState::Armed => Some(NoDropNoOpEmpty::new(())),
+            GuardState::Disarmed => None,
+        }
+    }
+}
+
+// Implementation for DropGuardNoOp<Msg> (message variant)
+impl<'msg> DropGuardNoOp<'msg, Msg> {
+    /// Creates a new armed guard with a custom panic message.
+    ///
+    /// The message is immediately dropped and ignored, since this type never [`panic!`]s.
+    pub fn new_armed<M: Into<Cow<'msg, str>>>(_msg: M) -> Self {
+        Self::ARMED
+    }
+
+    /// Creates a new disarmed guard with a custom panic message.
+    ///
+    /// The message is immediately dropped and ignored, since this type never [`panic!`]s.
+    pub fn new_disarmed<M: Into<Cow<'msg, str>>>(_msg: M) -> Self {
+        Self::DISARMED
+    }
+
+    /// Consumes the guard, returning the inner [`NoDropNoOpMsg`] if armed, or [`None`] if disarmed.
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn, reason = "API consistency with other guard types")]
+    pub fn into_guard(self) -> Option<NoDropNoOpMsg<'msg>> {
+        match self.state {
+            GuardState::Armed => Some(NoDropNoOpMsg::new(())),
+            GuardState::Disarmed => None,
+        }
+    }
+
+    /// Sets a new panic message, preserving the armed/disarmed state.
+    ///
+    /// This method is a no-op for this type, since it never panics. The message is immediately
+    /// dropped and ignored.
+    pub fn set_msg<M: Into<Cow<'msg, str>>>(self, _msg: M) -> Self {
+        self
+    }
+}
+
 impl From<NoDropNoOpEmpty> for DropGuardNoOp<'_, NoMsg> {
     fn from(_: NoDropNoOpEmpty) -> Self {
-        Self::new(GuardState::Armed)
+        Self::ARMED
     }
 }
 
 impl From<NoDropNoOpMsg<'_>> for DropGuardNoOp<'_, Msg> {
     fn from(_: NoDropNoOpMsg<'_>) -> Self {
-        Self::new(GuardState::Armed)
+        Self::ARMED
     }
 }
 

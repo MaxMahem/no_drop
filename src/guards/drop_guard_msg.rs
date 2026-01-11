@@ -83,18 +83,24 @@ impl<'msg> DropGuardMsg<'msg> {
     ///
     /// Returns `true` if the guard was armed, or `false` if it was already armed.
     pub fn arm(&mut self) -> bool {
-        let (new_state, was_disarmed) = std::mem::replace(&mut self.0, DropGuardMsgState::EMPTY).arm();
-        self.0 = new_state;
-        was_disarmed
+        self.apply_state_change(DropGuardMsgState::arm)
     }
 
     /// Disarms the guard.
     ///
     /// Returns `true` if the guard was disarmed or `false` if it was already disarmed.
     pub fn disarm(&mut self) -> bool {
-        let (new_state, was_armed) = std::mem::replace(&mut self.0, DropGuardMsgState::EMPTY).disarm();
+        self.apply_state_change(DropGuardMsgState::disarm)
+    }
+
+    /// Helper method to apply a state transformation function.
+    fn apply_state_change(
+        &mut self,
+        f: impl FnOnce(DropGuardMsgState<'msg>) -> (DropGuardMsgState<'msg>, bool),
+    ) -> bool {
+        let (new_state, changed) = f(std::mem::replace(&mut self.0, DropGuardMsgState::EMPTY));
         self.0 = new_state;
-        was_armed
+        changed
     }
 
     /// Toggles the guard between armed and disarmed states.

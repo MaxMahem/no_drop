@@ -20,7 +20,7 @@ impl DropGuardEmpty {
     /// Creates a new armed guard.
     #[must_use]
     pub const fn new_armed() -> Self {
-        Self(Some(NoDropEmpty::new()))
+        Self(Some(NoDropEmpty::guard()))
     }
 
     /// Creates a new disarmed guard.
@@ -45,7 +45,7 @@ impl DropGuardEmpty {
     ///
     /// Returns `true` if the guard was armed, or `false` if it was already armed.
     pub fn arm(&mut self) -> bool {
-        self.0.replace(NoDropEmpty::new()).map(NoDropEmpty::forget).is_none()
+        self.0.replace(NoDropEmpty::guard()).map(NoDropEmpty::forget).is_none()
     }
 
     /// Disarms the guard.

@@ -1,17 +1,20 @@
 use std::borrow::Cow;
 use std::mem::ManuallyDrop;
 
+use crate::DEFAULT_DROP_PANIC_MSG;
+
 /// A wrapper around a `T` `value` with a custom panic `msg` and will [`panic!`]s if dropped without being
 /// [`Self::unwrap`]ped or [`Self::forget`]ten.
 ///
 /// The lifetime parameter `'msg` allows borrowing the message, and most commonly will be `'static`.
 #[derive(
+    Debug,
+    Clone,
     PartialEq,
     Eq,
     PartialOrd,
     Ord,
     Hash,
-    Debug,
     derive_more::Deref,
     derive_more::DerefMut,
     derive_more::AsMut,
@@ -28,6 +31,9 @@ pub struct NoDropMsg<'msg, T = ()> {
 }
 
 impl<'msg, T> NoDropMsg<'msg, T> {
+    /// Panic message if type is default constructed
+    pub const DEFAULT_PANIC_MSG: &'static str = DEFAULT_DROP_PANIC_MSG;
+
     /// Creates a new wrapper around `value` with a custom [`panic!`] `msg`.
     ///
     /// # Examples
@@ -90,9 +96,9 @@ impl<'msg> NoDropMsg<'msg, ()> {
     }
 }
 
-impl<'msg> Clone for NoDropMsg<'msg, ()> {
-    fn clone(&self) -> Self {
-        Self { value: (), msg: self.msg.clone() }
+impl<T: Default> Default for NoDropMsg<'_, T> {
+    fn default() -> Self {
+        Self { value: T::default(), msg: Cow::from(Self::DEFAULT_PANIC_MSG) }
     }
 }
 

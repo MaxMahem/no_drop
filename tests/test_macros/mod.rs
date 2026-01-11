@@ -147,43 +147,53 @@ macro_rules! set_msg {
     };
 }
 
-/// Test macro for constructors that take a single value parameter.
-/// Pattern: test_ctor!(test_name, constructor, (params), expected);
+/// Test macro for drop behavior.
+/// Pattern: test_drop!(test_name, method_call_expr, panic: "expected message");
+/// Pattern: test_drop!(test_name, method_call_expr, no_panic);
 #[allow(unused_macros)]
-macro_rules! test_ctor {
-    ($test_name:ident, $ctor:expr, ($($params:tt)*), $expected:expr) => {
+macro_rules! test_drop {
+    // Drop should panic with expected message
+    ($test_name:ident, $method_call:expr, panic: $panic_msg:literal) => {
+        #[test]
+        #[should_panic(expected = $panic_msg)]
+        fn $test_name() {
+            let wrapper = $method_call;
+            drop(wrapper);
+        }
+    };
+
+    // Drop should not panic
+    ($test_name:ident, $method_call:expr, no_panic) => {
         #[test]
         fn $test_name() {
-            let wrapper = $ctor($($params)*);
+            let wrapper = $method_call;
+            drop(wrapper);
+        }
+    };
+}
+
+/// Test macro for constructors that wrap a value.
+/// Pattern: wrap_ctor!(test_name, ctor, expected);
+#[allow(unused_macros)]
+macro_rules! wrap_ctor {
+    ($test_name:ident, $ctor:expr, $expected:expr) => {
+        #[test]
+        fn $test_name() {
+            let wrapper = $ctor;
             assert_eq!(wrapper.unwrap(), $expected);
         }
     };
 }
 
 /// Test macro for the forget method.
-/// Pattern: test_forget!(test_name, constructor, (params));
+/// Pattern: test_forget!(test_name, ctor);
 #[allow(unused_macros)]
 macro_rules! test_forget {
-    ($test_name:ident, $ctor:expr, ($($params:tt)*)) => {
+    ($test_name:ident, $ctor:expr) => {
         #[test]
         fn $test_name() {
-            let wrapper = $ctor($($params)*);
+            let wrapper = $ctor;
             wrapper.forget();
-        }
-    };
-}
-
-/// Test macro for the clone method.
-/// Pattern: test_clone!(test_name, type);
-#[allow(unused_macros)]
-macro_rules! test_clone {
-    ($test_name:ident, $type:ty, $ctor:expr, ($($params:tt)*)) => {
-        #[test]
-        fn $test_name() {
-            let wrapper = $ctor($($params)*);
-            let clone = <$type>::clone(&wrapper);
-            wrapper.forget();
-            clone.forget();
         }
     };
 }
@@ -193,12 +203,12 @@ pub(crate) use guard_ctor;
 #[allow(unused_imports)]
 pub(crate) use set_msg;
 #[allow(unused_imports)]
-pub(crate) use test_clone;
-#[allow(unused_imports)]
-pub(crate) use test_ctor;
+pub(crate) use test_drop;
 #[allow(unused_imports)]
 pub(crate) use test_forget;
 #[allow(unused_imports)]
 pub(crate) use transition;
 #[allow(unused_imports)]
 pub(crate) use try_from;
+#[allow(unused_imports)]
+pub(crate) use wrap_ctor;
