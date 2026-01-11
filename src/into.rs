@@ -1,26 +1,26 @@
 use std::borrow::Cow;
 
-use crate::wrap::{NoDropEmpty, NoDropMsg, NoDropPassEmpty, NoDropPassMsg};
+use crate::wrap::{NoDropEmpty, NoDropMsg, NoDropNoOpEmpty, NoDropNoOpMsg};
 
-/// Extension trait for wrapping values in [`NoDropPassEmpty`] or [`NoDropPassMsg`].
+/// Extension trait for wrapping values in [`NoDropNoOpEmpty`] or [`NoDropNoOpMsg`].
 ///
-/// This is the "dbg" version that returns zero-cost passthrough wrappers.
+/// This is the "dbg" version that returns zero-cost no_op wrappers.
 #[allow(dead_code)]
 pub trait IntoNoDropDbg: Sized {
-    /// Wraps this value in a [`NoDropPassEmpty`].
-    fn no_drop(self) -> NoDropPassEmpty<Self>;
+    /// Wraps this value in a [`NoDropNoOpEmpty`].
+    fn no_drop(self) -> NoDropNoOpEmpty<Self>;
 
-    /// Wraps this value in a [`NoDropPassMsg`] with a custom message.
-    fn expect_no_drop<'msg, M: Into<Cow<'msg, str>>>(self, msg: M) -> NoDropPassMsg<'msg, Self>;
+    /// Wraps this value in a [`NoDropNoOpMsg`] with a custom message.
+    fn expect_no_drop<'msg, M: Into<Cow<'msg, str>>>(self, msg: M) -> NoDropNoOpMsg<'msg, Self>;
 }
 
 impl<T> IntoNoDropDbg for T {
-    fn no_drop(self) -> NoDropPassEmpty<Self> {
-        NoDropPassEmpty::wrap(self)
+    fn no_drop(self) -> NoDropNoOpEmpty<Self> {
+        NoDropNoOpEmpty::wrap(self)
     }
 
-    fn expect_no_drop<'msg, M: Into<Cow<'msg, str>>>(self, msg: M) -> NoDropPassMsg<'msg, Self> {
-        NoDropPassMsg::wrap(self, msg)
+    fn expect_no_drop<'msg, M: Into<Cow<'msg, str>>>(self, msg: M) -> NoDropNoOpMsg<'msg, Self> {
+        NoDropNoOpMsg::wrap(self, msg)
     }
 }
 

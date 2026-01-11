@@ -13,8 +13,6 @@ license = "MIT OR Apache-2.0"
 authors = ["Austin Stanley <MaxTMahem@gmail.com>"]
 readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 derive_more = { version = "2.1.0", features = ["as_ref", "deref", "deref_mut"] }
 sealed = "0.6.0"

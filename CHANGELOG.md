@@ -9,23 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.4] - 2026-01-09
-
 ### Changed
 
+- **Breaking** - Renamed marker types and traits:
+  - `PassMarker` trait renamed to `MsgMarker`
+  - `Empty` marker type renamed to `NoMsg`
+- **Breaking** - Replaced `DEFAULT_DROP_PANIC_MSG` module constant with type-associated constants
+  - Removed public `DEFAULT_DROP_PANIC_MSG` export from `dbg` and `rls` modules
+  - Added `PANIC_MSG` as a public associated constant on Empty variant types:
+    - `NoDropEmpty::PANIC_MSG`
+    - `no_drop_pass_empty::NoDropPass::PANIC_MSG`
+    - `DropGuardEmpty::PANIC_MSG`
+    - `DropGuardPass<Empty>::PANIC_MSG`
 - Specified MSRV as 1.85.1
 - Made the following methods `const`:
-  - `DropGuardEmpty`: `new()`, `wrap()`, `is_armed()`
-  - `DropGuardMsg`: `wrap()`, `is_armed()`
-  - `DropGuardPass`: `new()`, `wrap()`, `is_armed()`, `guard()`
+  - `DropGuardEmpty`: `new()`, `wrap()`, `armed()`, `disarmed()`
+  - `DropGuardMsg`: `wrap()`, `armed()`, `disarmed()`
+  - `DropGuardPass`: `new()`, `wrap()`, `armed()`, `disarmed()`, `guard()`
 
 ### Fixed
 
-- Fixed benchmark compilation error where `dbg::NoDrop` was unavailable in release mode
-- Renamed internal `no_drop` module to `wrap` and made it public (with `#[doc(hidden)]`) to allow benchmarks to access both debug and release variants
+- Fixed `DropGuardMsg::disarm()` where calling `disarm()` on an already-disarmed guard would lose the panic message. The message is now properly preserved across all state transitions.
+- Fixed compilation error where `dbg::NoDrop` was unavailable in release mode
 
 ### Added
 
+- Added `GuardState` enum to represent armed/disarmed state
+- Added `toggle()` method to all drop guard types (returns `GuardState` indicating new state):
+  - `DropGuardMsg::toggle()` - Toggles between armed and disarmed states
+  - `DropGuardEmpty::toggle()` - Toggles between armed and disarmed states
+  - `DropGuardNoOp::toggle()` - Toggles between armed and disarmed states
+- Added `DropGuardMsg::set_msg()` method to change the panic message while preserving the armed/disarmed state
 - Added verification benchmarks.
 
 ## [0.2.3] - 2025-12-17

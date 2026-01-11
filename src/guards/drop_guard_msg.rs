@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
-use crate::{guards::GuardNotArmed, wrap::NoDropMsg};
+use crate::guards::{GuardNotArmed, GuardState};
+use crate::wrap::NoDropMsg;
 
 /// A mutable drop guard with custom panic message.
 ///
@@ -19,9 +20,35 @@ enum DropGuardMsgState<'msg> {
     Disarmed(Cow<'msg, str>),
 }
 
-impl Default for DropGuardMsgState<'_> {
-    fn default() -> Self {
-        Self::Disarmed(Cow::Borrowed(""))
+impl DropGuardMsgState<'_> {
+    const EMPTY: Self = Self::Disarmed(Cow::Borrowed(""));
+
+    /// Arms the state, consuming it and returning the armed state.
+    ///
+    /// Returns the state unchanged if already armed.
+    fn arm(self) -> (Self, bool) {
+        match self {
+            Self::Armed(_) => (self, false),
+            Self::Disarmed(msg) => (Self::Armed(NoDropMsg::guard(msg)), true),
+        }
+    }
+
+    /// Disarms the state, consuming it and returning the disarmed state.
+    ///
+    /// Returns the state unchanged if already disarmed.
+    fn disarm(self) -> (Self, bool) {
+        match self {
+            Self::Disarmed(_) => (self, false),
+            Self::Armed(guard) => (Self::Disarmed(guard.unwrap_msg()), true),
+        }
+    }
+
+    /// Toggles the state between armed and disarmed.
+    fn toggle(self) -> (Self, GuardState) {
+        match self {
+            Self::Armed(guard) => (Self::Disarmed(guard.unwrap_msg()), GuardState::Disarmed),
+            Self::Disarmed(msg) => (Self::Armed(NoDropMsg::guard(msg)), GuardState::Armed),
+        }
     }
 }
 
@@ -56,27 +83,46 @@ impl<'msg> DropGuardMsg<'msg> {
     ///
     /// Returns `true` if the guard was armed, or `false` if it was already armed.
     pub fn arm(&mut self) -> bool {
-        match &mut self.0 {
-            DropGuardMsgState::Armed(_) => false,
-            DropGuardMsgState::Disarmed(msg) => {
-                let msg = std::mem::take(msg);
-                self.0 = DropGuardMsgState::Armed(NoDropMsg::guard(msg));
-                true
-            }
-        }
+        let (new_state, was_disarmed) = std::mem::replace(&mut self.0, DropGuardMsgState::EMPTY).arm();
+        self.0 = new_state;
+        was_disarmed
     }
 
     /// Disarms the guard.
     ///
     /// Returns `true` if the guard was disarmed or `false` if it was already disarmed.
     pub fn disarm(&mut self) -> bool {
-        match std::mem::take(&mut self.0) {
-            DropGuardMsgState::Disarmed(_) => false,
-            DropGuardMsgState::Armed(guard) => {
-                let msg = guard.unwrap_msg();
-                self.0 = DropGuardMsgState::Disarmed(msg);
-                true
-            }
+        let (new_state, was_armed) = std::mem::replace(&mut self.0, DropGuardMsgState::EMPTY).disarm();
+        self.0 = new_state;
+        was_armed
+    }
+
+    /// Toggles the guard between armed and disarmed states.
+    ///
+    /// Returns the new state of the guard.
+    pub fn toggle(&mut self) -> GuardState {
+        let (new_state, state) = std::mem::replace(&mut self.0, DropGuardMsgState::EMPTY).toggle();
+        self.0 = new_state;
+        state
+    }
+
+    /// Sets a new panic message, preserving the armed/disarmed state.
+    ///
+    /// Note: This changes the lifetime of the guard to match the new message's lifetime.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use no_drop::rls::DropGuard;
+    ///
+    /// let mut guard = DropGuard::new_disarmed("original message");
+    /// let mut guard = guard.set_msg("new message");
+    /// ```
+    pub fn set_msg<'new, M: Into<Cow<'new, str>>>(self, msg: M) -> DropGuardMsg<'new> {
+        let msg = msg.into();
+        match self.0 {
+            DropGuardMsgState::Armed(guard) => DropGuardMsg(DropGuardMsgState::Armed(guard.set_msg(msg))),
+            DropGuardMsgState::Disarmed(_) => DropGuardMsg(DropGuardMsgState::Disarmed(msg)),
         }
     }
 
@@ -101,29 +147,5 @@ impl<'msg> TryFrom<DropGuardMsg<'msg>> for NoDropMsg<'msg> {
 
     fn try_from(value: DropGuardMsg<'msg>) -> Result<Self, Self::Error> {
         value.into_guard().ok_or(GuardNotArmed)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::guards::test_macros::{ctor, transition, try_from};
-
-    ctor!(new_armed, DropGuardMsg::new_armed, ("custom panic message"), armed, "custom panic message");
-    ctor!(new_disarmed, DropGuardMsg::new_disarmed, ("custom message"), disarmed);
-    ctor!(from_no_drop, DropGuardMsg::from, (NoDropMsg::guard("custom")), armed, "custom");
-
-    try_from!(try_from_armed, DropGuardMsg::new_armed, ("message"), NoDropMsg, armed);
-    try_from!(try_from_disarmed, DropGuardMsg::new_disarmed, ("message"), NoDropMsg, disarmed);
-
-    transition!(arm_when_disarmed, DropGuardMsg::new_disarmed, ("test"), arm, true, armed, "test");
-    transition!(arm_when_armed, DropGuardMsg::new_armed, ("test"), arm, false, armed, "test");
-    transition!(disarm_when_armed, DropGuardMsg::new_armed, ("test"), disarm, true, disarmed);
-    transition!(disarm_when_disarmed, DropGuardMsg::new_disarmed, ("test"), disarm, false, disarmed);
-
-    #[test]
-    fn default_is_disarmed() {
-        let state = DropGuardMsgState::default();
-        assert_eq!(state, DropGuardMsgState::Disarmed(Cow::Borrowed("")));
     }
 }

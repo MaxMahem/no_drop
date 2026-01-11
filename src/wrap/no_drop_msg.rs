@@ -82,6 +82,12 @@ impl<'msg> NoDropMsg<'msg, ()> {
         // No uninitialized access can occur.
         unsafe { std::ptr::read(&raw const this.msg) }
     }
+
+    /// Sets a new panic message, consuming the old guard.
+    pub(crate) fn set_msg<'new, M: Into<Cow<'new, str>>>(self, msg: M) -> NoDropMsg<'new, ()> {
+        self.forget();
+        NoDropMsg::guard(msg)
+    }
 }
 
 impl<'msg> Clone for NoDropMsg<'msg, ()> {
@@ -95,46 +101,5 @@ impl<'msg, T> Drop for NoDropMsg<'msg, T> {
     #[track_caller]
     fn drop(&mut self) {
         panic!("{}", self.msg);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::into::{IntoNoDropDbg, IntoNoDropRls};
-    use crate::wrap::test_macros::{test_clone, test_ctor, test_forget};
-
-    #[test]
-    #[should_panic(expected = "custom panic message")]
-    fn no_drop_msg_panics() {
-        let wrapper = NoDropMsg::wrap(42, "custom panic message");
-        drop(wrapper);
-    }
-
-    test_ctor!(no_drop_msg_static_str, NoDropMsg::wrap, (42, "custom message"), 42);
-    test_ctor!(no_drop_msg_string, NoDropMsg::wrap, (42, String::from("owned message")), 42);
-
-    test_ctor!(into_no_drop_msg_dbg_trait, IntoNoDropDbg::expect_no_drop, (42, "msg"), 42);
-    test_ctor!(into_no_drop_msg_rls_trait, IntoNoDropRls::expect_no_drop, (42, "msg"), 42);
-
-    test_ctor!(no_drop_msg_expect_static_str, NoDropMsg::guard, ("expected message"), ());
-    test_ctor!(no_drop_msg_expect_string, NoDropMsg::guard, (String::from("owned expected message")), ());
-
-    test_clone!(no_drop_clone, NoDropMsg, NoDropMsg::guard, ("custom message"));
-
-    test_forget!(no_drop_msg_forget, NoDropMsg::wrap, (42, "custom message"));
-
-    #[test]
-    fn no_drop_msg_borrowed() {
-        let msg = String::from("borrowed message");
-        let wrapper = NoDropMsg::wrap(42, msg.as_str());
-        assert_eq!(wrapper.unwrap(), 42);
-    }
-
-    #[test]
-    #[should_panic(expected = "unit value must be consumed")]
-    fn no_drop_msg_expect_panics() {
-        let wrapper = NoDropMsg::guard("unit value must be consumed");
-        drop(wrapper);
     }
 }

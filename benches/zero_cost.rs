@@ -2,7 +2,7 @@ use std::hint::black_box;
 
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use no_drop::wrap::{NoDrop, NoDropPassEmpty};
+use no_drop::wrap::{NoDrop, NoDropNoOpEmpty};
 
 const SMALL_VALUE: u32 = 42;
 const LARGE_VALUE: [u64; 9] = [0; 9];
@@ -20,12 +20,12 @@ fn small_wrap_unwrap(c: &mut Criterion) {
 
     group.bench_function("release", |b| {
         b.iter(|| {
-            let value = NoDropPassEmpty::wrap(black_box(SMALL_VALUE));
+            let value = NoDropNoOpEmpty::wrap(black_box(SMALL_VALUE));
             black_box(value.unwrap() == SMALL_VALUE)
         })
     });
 
-    group.bench_function("debug", |b| {
+    group.bench_function("no_op", |b| {
         b.iter(|| {
             let value = NoDrop::wrap(black_box(SMALL_VALUE));
             black_box(value.unwrap() == SMALL_VALUE)
@@ -48,7 +48,7 @@ fn large_wrap_unwrap(c: &mut Criterion) {
 
     group.bench_function("release", |b| {
         b.iter(|| {
-            let value = NoDropPassEmpty::wrap(black_box(LARGE_VALUE));
+            let value = NoDropNoOpEmpty::wrap(black_box(LARGE_VALUE));
             black_box(value.unwrap() == LARGE_VALUE)
         })
     });
