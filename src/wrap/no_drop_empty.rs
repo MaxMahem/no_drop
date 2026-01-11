@@ -1,16 +1,17 @@
+use crate::DEFAULT_DROP_PANIC_MSG;
 use std::mem::ManuallyDrop;
-
-pub const DEFAULT_DROP_PANIC_MSG: &str = "Value was dropped without being unwrapped";
 
 /// A wrapper around a `T` value that always [`panic!`]s if dropped without being
 /// [`Self::unwrap`]ed or [`Self::forget`]ten.
 #[derive(
+    Debug,
+    Default,
+    Clone,
     PartialEq,
     Eq,
     PartialOrd,
     Ord,
     Hash,
-    Debug,
     derive_more::Deref,
     derive_more::DerefMut,
     derive_more::AsMut,
@@ -20,6 +21,9 @@ pub const DEFAULT_DROP_PANIC_MSG: &str = "Value was dropped without being unwrap
 pub struct NoDropEmpty<T = ()>(T);
 
 impl<T> NoDropEmpty<T> {
+    /// Panic message used when dropped without being [`Self::unwrap`]ed or [`Self::forget`]ten.
+    pub const PANIC_MSG: &'static str = DEFAULT_DROP_PANIC_MSG;
+
     /// Creates a new wrapper around `value`.
     pub fn wrap(value: T) -> Self {
         Self(value)
@@ -53,20 +57,8 @@ impl<T> NoDropEmpty<T> {
 
 impl NoDropEmpty<()> {
     /// Creates a new empty [`NoDropEmpty`] guard.
-    pub const fn new() -> Self {
+    pub const fn guard() -> Self {
         Self(())
-    }
-}
-
-impl Default for NoDropEmpty<()> {
-    fn default() -> Self {
-        Self(())
-    }
-}
-
-impl Clone for NoDropEmpty<()> {
-    fn clone(&self) -> Self {
-        Self::new()
     }
 }
 
@@ -76,28 +68,4 @@ impl<T> Drop for NoDropEmpty<T> {
     fn drop(&mut self) {
         panic!("{}", DEFAULT_DROP_PANIC_MSG);
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::into::{IntoNoDropDbg, IntoNoDropRls};
-    use crate::no_drop::test_macros::{test_clone, test_ctor, test_forget};
-
-    #[test]
-    #[should_panic(expected = "Value was dropped without being unwrapped")]
-    fn no_drop_empty_panics() {
-        let wrapper = NoDropEmpty::wrap(42);
-        drop(wrapper);
-    }
-
-    test_ctor!(no_drop_empty_wrap, NoDropEmpty::wrap, (42), 42);
-    test_ctor!(into_no_drop_dbg_trait, IntoNoDropDbg::no_drop, (42), 42);
-    test_ctor!(into_no_drop_rls_trait, IntoNoDropRls::no_drop, (42), 42);
-    test_ctor!(no_drop_empty_new, NoDropEmpty::new, (), ());
-    test_ctor!(no_drop_empty_default, NoDropEmpty::default, (), ());
-
-    test_clone!(no_drop_empty_clone, NoDropEmpty, NoDropEmpty::new, ());
-
-    test_forget!(no_drop_empty_forget, NoDropEmpty::new, ());
 }

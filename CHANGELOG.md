@@ -1,8 +1,50 @@
+<!-- Markdownlint-disable no-duplicate-heading -->
+
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.3.0] - 2026-01-11
+
+### Changed
+
+- **Breaking** - Renamed `new()` to `guard()` for empty guard constructors:
+  - `NoDropEmpty::new()` → `NoDropEmpty::guard()`
+  - `NoDropNoOpEmpty::new()` → `NoDropNoOpEmpty::guard()`
+- **Breaking** - Renamed marker types and traits:
+  - `PassMarker` trait renamed to `MsgMarker`
+  - `Empty` marker type renamed to `NoMsg`
+- **Breaking** - Replaced `DEFAULT_DROP_PANIC_MSG` module constant with type-associated constants
+  - Removed public `DEFAULT_DROP_PANIC_MSG` export from `dbg` and `rls` modules
+  - Added `PANIC_MSG` as a public associated constant on Empty variant types:
+    - `NoDrop::PANIC_MSG`
+    - `DropGuardEmpty::PANIC_MSG`
+  - Added `PANIC_MSG` as a public associated constant on Message variant types:
+    - `NoDropMsg::PANIC_MSG`
+    - `DropGuardMsg::PANIC_MSG`
+- Specified MSRV as 1.85.1
+- Made the following methods `const`:
+  - `DropGuardEmpty`: `guard()`, `wrap()`, `armed()`, `disarmed()`
+  - `DropGuardMsg`: `guard()`, `wrap()`, `armed()`, `disarmed()`
+  - `DropGuardPass`: `guard()`, `wrap()`, `armed()`, `disarmed()`
+
+### Fixed
+
+- Fixed `DropGuardMsg::disarm()` where calling `disarm()` on an already-disarmed guard would lose the panic message. The message is now properly preserved across all state transitions.
+- Fixed compilation error where `dbg::NoDrop` was unavailable in release mode
+
+### Added
+
+- Added `GuardState` enum to represent armed/disarmed state
+- Added `toggle()` method to all drop guard types (returns `GuardState` indicating new state):
+  - `DropGuardMsg::toggle()` - Toggles between armed and disarmed states
+  - `DropGuardEmpty::toggle()` - Toggles between armed and disarmed states
+  - `DropGuardNoOp::toggle()` - Toggles between armed and disarmed states
+- Added `DropGuardMsg::set_msg()` method to change the panic message while preserving the armed/disarmed state
+- Added verification benchmarks.
 
 ## [0.2.3] - 2025-12-17
 
@@ -65,12 +107,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration Guide
 
 Replace `Consume` trait usage with direct method calls:
+
 - `Consume::new(value)` → `NoDrop::wrap(value)` or `NoDropPassthrough::wrap(value)`
 - `value.consume()` remains the same
 - `value.forget()` remains the same
 - Remove `use no_drop::{dbg,rls}::Consume` imports
 
 Replace `consume()` calls with `unwrap()`:
+
 - `value.consume()` → `value.unwrap()`
 
 [0.2.0]: https://github.com/MaxMahem/no_drop/releases/tag/v0.2.0

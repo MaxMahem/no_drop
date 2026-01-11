@@ -4,18 +4,18 @@ use sealed::sealed;
 ///
 /// This trait is sealed and cannot be implemented outside this crate.
 #[sealed]
-pub trait PassMarker {}
+pub trait MsgMarker {}
 
 /// Marker type for passthrough types without custom message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Empty;
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct NoMsg;
 
 #[sealed]
-impl PassMarker for Empty {}
+impl MsgMarker for NoMsg {}
 
 /// Marker type for passthrough types with custom message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Msg;
 
 #[sealed]
-impl PassMarker for Msg {}
+impl MsgMarker for Msg {}

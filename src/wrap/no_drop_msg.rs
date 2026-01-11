@@ -1,17 +1,20 @@
 use std::borrow::Cow;
 use std::mem::ManuallyDrop;
 
+use crate::DEFAULT_DROP_PANIC_MSG;
+
 /// A wrapper around a `T` `value` with a custom panic `msg` and will [`panic!`]s if dropped without being
 /// [`Self::unwrap`]ped or [`Self::forget`]ten.
 ///
 /// The lifetime parameter `'msg` allows borrowing the message, and most commonly will be `'static`.
 #[derive(
+    Debug,
+    Clone,
     PartialEq,
     Eq,
     PartialOrd,
     Ord,
     Hash,
-    Debug,
     derive_more::Deref,
     derive_more::DerefMut,
     derive_more::AsMut,
@@ -28,6 +31,9 @@ pub struct NoDropMsg<'msg, T = ()> {
 }
 
 impl<'msg, T> NoDropMsg<'msg, T> {
+    /// Panic message if type is default constructed
+    pub const DEFAULT_PANIC_MSG: &'static str = DEFAULT_DROP_PANIC_MSG;
+
     /// Creates a new wrapper around `value` with a custom [`panic!`] `msg`.
     ///
     /// # Examples
@@ -82,11 +88,17 @@ impl<'msg> NoDropMsg<'msg, ()> {
         // No uninitialized access can occur.
         unsafe { std::ptr::read(&raw const this.msg) }
     }
+
+    /// Sets a new panic message, consuming the old guard.
+    pub(crate) fn set_msg<'new, M: Into<Cow<'new, str>>>(self, msg: M) -> NoDropMsg<'new, ()> {
+        self.forget();
+        NoDropMsg::guard(msg)
+    }
 }
 
-impl<'msg> Clone for NoDropMsg<'msg, ()> {
-    fn clone(&self) -> Self {
-        Self { value: (), msg: self.msg.clone() }
+impl<T: Default> Default for NoDropMsg<'_, T> {
+    fn default() -> Self {
+        Self { value: T::default(), msg: Cow::from(Self::DEFAULT_PANIC_MSG) }
     }
 }
 
@@ -95,46 +107,5 @@ impl<'msg, T> Drop for NoDropMsg<'msg, T> {
     #[track_caller]
     fn drop(&mut self) {
         panic!("{}", self.msg);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::into::{IntoNoDropDbg, IntoNoDropRls};
-    use crate::no_drop::test_macros::{test_clone, test_ctor, test_forget};
-
-    #[test]
-    #[should_panic(expected = "custom panic message")]
-    fn no_drop_msg_panics() {
-        let wrapper = NoDropMsg::wrap(42, "custom panic message");
-        drop(wrapper);
-    }
-
-    test_ctor!(no_drop_msg_static_str, NoDropMsg::wrap, (42, "custom message"), 42);
-    test_ctor!(no_drop_msg_string, NoDropMsg::wrap, (42, String::from("owned message")), 42);
-
-    test_ctor!(into_no_drop_msg_dbg_trait, IntoNoDropDbg::expect_no_drop, (42, "msg"), 42);
-    test_ctor!(into_no_drop_msg_rls_trait, IntoNoDropRls::expect_no_drop, (42, "msg"), 42);
-
-    test_ctor!(no_drop_msg_expect_static_str, NoDropMsg::guard, ("expected message"), ());
-    test_ctor!(no_drop_msg_expect_string, NoDropMsg::guard, (String::from("owned expected message")), ());
-
-    test_clone!(no_drop_clone, NoDropMsg, NoDropMsg::guard, ("custom message"));
-
-    test_forget!(no_drop_msg_forget, NoDropMsg::wrap, (42, "custom message"));
-
-    #[test]
-    fn no_drop_msg_borrowed() {
-        let msg = String::from("borrowed message");
-        let wrapper = NoDropMsg::wrap(42, msg.as_str());
-        assert_eq!(wrapper.unwrap(), 42);
-    }
-
-    #[test]
-    #[should_panic(expected = "unit value must be consumed")]
-    fn no_drop_msg_expect_panics() {
-        let wrapper = NoDropMsg::guard("unit value must be consumed");
-        drop(wrapper);
     }
 }

@@ -2,6 +2,7 @@
 
 [![Build](https://github.com/MaxMahem/no_drop/actions/workflows/build.yml/badge.svg)](https://github.com/MaxMahem/no_drop/actions/workflows/build.yml)
 [![Docs](https://github.com/MaxMahem/no_drop/actions/workflows/docs.yml/badge.svg)](https://MaxMahem.github.io/no_drop/no_drop/index.html)
+[![Crates.io](https://img.shields.io/crates/v/no_drop)](https://crates.io/crates/no_drop)
 [![dependency status](https://deps.rs/repo/github/MaxMahem/no_drop/status.svg)](https://deps.rs/repo/github/MaxMahem/no_drop)
 [![codecov](https://codecov.io/github/MaxMahem/no_drop/graph/badge.svg?token=VqGfOfh0vp)](https://codecov.io/github/MaxMahem/no_drop)
 ![GitHub License](https://img.shields.io/github/license/MaxMahem/no_drop)
@@ -20,7 +21,7 @@ Wraps a value in a guard type to ensure it is explicitly consumed before the gua
 
 ### `DropGuard` and `DropGuardMsg`
 
-A mutable drop guard that can be dynamically armed and disarmed. 
+A mutable drop guard that can be dynamically armed and disarmed.
 
 - **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with drop checks only in debug mode. Nearly zero cost in release builds (one `bool`).
 - **Always-Checked Mode**: Use the `rls` module for drop checks in all build configurations
@@ -109,7 +110,7 @@ struct Transaction {
 
 impl Transaction {
     fn new(x: i32) -> Self {
-        Self { guard: NoDrop::new(), other_data: x }
+        Self { guard: NoDrop::guard(), other_data: x }
     }
 
     fn finalize(self) {
@@ -199,4 +200,3 @@ let mut guard = DropGuard::new_disarmed("debug only");
 use no_drop::rls::DropGuard as DropGuardRls;
 let mut guard = DropGuardRls::new_disarmed("always checked");
 ```
-

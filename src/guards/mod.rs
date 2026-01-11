@@ -1,17 +1,19 @@
-mod drop_guard_empty;
-mod drop_guard_msg;
-mod drop_guard_pass;
+#[doc(hidden)]
+pub mod drop_guard_empty;
+#[doc(hidden)]
+pub mod drop_guard_msg;
+#[doc(hidden)]
+pub mod drop_guard_no_op;
+
+mod guard_state;
+pub use guard_state::GuardState;
 
 pub use drop_guard_empty::DropGuardEmpty;
-pub use drop_guard_msg::DropGuardMsg as DropGuard;
+pub use drop_guard_msg::{DropGuardMsg, DropGuardMsg as DropGuard};
+pub type DropGuardNoOpEmpty = drop_guard_no_op::DropGuardNoOp<'static, crate::markers::NoMsg>;
+pub type DropGuardNoOpMsg<'msg> = drop_guard_no_op::DropGuardNoOp<'msg, crate::markers::Msg>;
 
-#[cfg(test)]
-mod test_macros;
-#[allow(dead_code)]
-pub(crate) type DropGuardPassthroughEmpty = drop_guard_pass::DropGuardPass<'static, crate::markers::Empty>;
-#[allow(dead_code)]
-pub(crate) type DropGuardPassthroughMsg<'msg> = drop_guard_pass::DropGuardPass<'msg, crate::markers::Msg>;
-
+/// Error type returned when attempting to turn a Drop Guard into a No Drop when it is not armed.
 #[derive(Debug, thiserror::Error)]
 #[error("guard is not armed")]
 pub struct GuardNotArmed;
