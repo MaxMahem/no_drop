@@ -267,10 +267,11 @@ checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
 
 [[package]]
 name = "no_drop"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "criterion",
  "derive_more",
+ "no_drop",
  "sealed",
  "thiserror",
 ]

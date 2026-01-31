@@ -47,16 +47,6 @@ assert_eq!(inner, 42);
 // drop(value); // panic: "Value was dropped without being unwrapped"
 ```
 
-Or use the convenient `.no_drop()` method via the `IntoNoDrop` trait:
-
-```rust
-use no_drop::dbg::IntoNoDrop;
-
-let value = 42.no_drop();  // Wraps the value automatically
-let inner = value.unwrap();
-assert_eq!(inner, 42);
-```
-
 ### Always-Panicking Protection (`rls` module)
 
 The `rls` module provides panic protection in both debug and release builds:
@@ -168,7 +158,7 @@ use no_drop::dbg::DropGuard;
 let mut guard = DropGuard::new_armed("critical section not exited properly");
 
 // Check state
-assert!(guard.armed());
+assert!(guard.is_armed());
 
 // do work...
 

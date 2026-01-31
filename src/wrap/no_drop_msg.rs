@@ -1,5 +1,5 @@
-use std::borrow::Cow;
-use std::mem::ManuallyDrop;
+use alloc::borrow::Cow;
+use core::mem::ManuallyDrop;
 
 use crate::DEFAULT_DROP_PANIC_MSG;
 
@@ -56,12 +56,12 @@ impl<'msg, T> NoDropMsg<'msg, T> {
         let this = ManuallyDrop::new(self);
         // SAFETY: `T` is moved out of the wrapper exactly once, then this is dropped.
         // No uninitialized access can occur.
-        unsafe { std::ptr::read(&raw const this.value) }
+        unsafe { core::ptr::read(&raw const this.value) }
     }
 
     /// Forgets this guard, safely dropping it.
     #[inline]
-    pub fn forget(self) {
+    pub const fn forget(self) {
         let _ = ManuallyDrop::new(self);
     }
 }
@@ -86,7 +86,7 @@ impl<'msg> NoDropMsg<'msg, ()> {
         let this = ManuallyDrop::new(self);
         // SAFETY: `msg` is moved out of the wrapper exactly once, then this is dropped.
         // No uninitialized access can occur.
-        unsafe { std::ptr::read(&raw const this.msg) }
+        unsafe { core::ptr::read(&raw const this.msg) }
     }
 
     /// Sets a new panic message, consuming the old guard.
@@ -102,7 +102,7 @@ impl<T: Default> Default for NoDropMsg<'_, T> {
     }
 }
 
-impl<'msg, T> Drop for NoDropMsg<'msg, T> {
+impl<T> Drop for NoDropMsg<'_, T> {
     /// [`panic!`]s with `msg`.
     #[track_caller]
     fn drop(&mut self) {

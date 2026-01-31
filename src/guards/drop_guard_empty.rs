@@ -4,9 +4,9 @@ use crate::wrap::NoDropEmpty;
 
 /// A mutable drop guard with a default panic message.
 ///
-/// This guard can be toggled between [`Self::armed`] and [`Self::disarmed`] states via
-/// [`Self::arm`] and [`Self::disarm`], respectively. While [`Self::armed`] it will [`panic!`]
-/// if dropped, when [`Self::disarmed`] it will not.
+/// This guard can be toggled between [`Armed`](GuardState::Armed) and [`Disarmed`](GuardState::Disarmed) states via
+/// [`Self::arm`] and [`Self::disarm`], respectively. While `Armed` it will
+/// [`panic!`] if dropped, when `Disarmed` it will not.
 ///
 /// This can be used to guard a critical state or another type, ensuring it is not dropped while in
 /// that state.
@@ -29,15 +29,21 @@ impl DropGuardEmpty {
         Self(None)
     }
 
+    /// Returns the current state of the guard.
+    #[must_use]
+    pub const fn state(&self) -> GuardState {
+        if self.is_armed() { GuardState::Armed } else { GuardState::Disarmed }
+    }
+
     /// Returns whether the guard is armed.
     #[must_use]
-    pub const fn armed(&self) -> bool {
+    pub const fn is_armed(&self) -> bool {
         self.0.is_some()
     }
 
     /// Returns whether the guard is disarmed.
     #[must_use]
-    pub const fn disarmed(&self) -> bool {
+    pub const fn is_disarmed(&self) -> bool {
         self.0.is_none()
     }
 
@@ -59,7 +65,7 @@ impl DropGuardEmpty {
     ///
     /// Returns the new state of the guard.
     pub fn toggle(&mut self) -> GuardState {
-        match self.armed() {
+        match self.is_armed() {
             true => {
                 self.disarm();
                 GuardState::Disarmed

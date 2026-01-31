@@ -7,6 +7,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-01-31
+
+### Added
+
+- Added `state()` method to all drop guard types to get current `GuardState`.
+- Added `no_std` support.
+- Added `alloc` feature (enabled by default). Gates `Cow` dependent types:
+  - `NoDropMsg`
+  - `NoDropNoOpMsg`
+  - `DropGuardMsg`
+  - `DropGuardNoOpMsg`
+
+### Changed
+
+- Made the following methods `const`:
+  - `NoDropEmpty`: `wrap()`, `unwrap()`, `forget()`
+  - `NoDropNoOpEmpty`: `wrap()`, `unwrap()`, `forget()`
+- **Breaking** - Renamed `armed()` and `disarmed()` methods to `is_armed()` and `is_disarmed()` respectively.
+  - Migration: `guard.armed()` → `guard.is_armed()`
+  - Migration: `guard.disarmed()` → `guard.is_disarmed()`
+
+### Removed
+
+- **Breaking** - Removed `IntoNoDrop` extension trait and its `IntoNoDropDbg`/`IntoNoDropRls` variants.
+  - Migration: `value.no_drop()` → `NoDrop::wrap(value)`
+
 ## [0.3.0] - 2026-01-11
 
 ### Changed
