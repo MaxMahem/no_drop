@@ -9,7 +9,7 @@ use crate::markers::{MsgMarker, NoMsg};
 /// making it a zero-cost abstraction suitable for release builds.
 ///
 /// The type parameter `M` is a zero-sized marker that distinguishes between the plain variant
-/// ([`NoMsg`]) and the message variant ([`Msg`]).
+/// ([`NoMsg`]) and the message variant ([`NoDropNoOpMsg`](crate::guards::DropGuardNoOpMsg)).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[must_use]
 pub struct DropGuardNoOp<'msg, M: MsgMarker = NoMsg> {
