@@ -7,8 +7,8 @@ macro_rules! guard_ctor {
         #[test]
         fn $test_name() {
             let guard = $ctor_expr;
-            assert!(guard.armed());
-            assert!(!guard.disarmed());
+            assert!(guard.is_armed());
+            assert!(!guard.is_disarmed());
         }
     };
 
@@ -17,17 +17,19 @@ macro_rules! guard_ctor {
         #[test]
         fn $test_name() {
             let guard = $ctor_expr;
-            assert!(guard.disarmed());
-            assert!(!guard.armed());
+            assert!(guard.is_disarmed());
+            assert!(!guard.is_armed());
         }
     };
 
     // Constructed armed - panics
-    ($test_name:ident, $ctor_expr:expr, armed, $panic_msg:literal) => {
+    ($test_name:ident, $ctor_expr:expr, armed: $panic_msg:literal) => {
         #[test]
         #[should_panic(expected = $panic_msg)]
         fn $test_name() {
             let guard = $ctor_expr;
+            assert!(guard.is_armed());
+            assert!(!guard.is_disarmed());
             drop(guard); // Will panic with expected message
         }
     };
@@ -37,6 +39,8 @@ macro_rules! guard_ctor {
         #[should_panic(expected = "Value was dropped without being unwrapped")]
         fn $test_name() {
             let guard = $ctor_expr;
+            assert!(guard.is_armed());
+            assert!(!guard.is_disarmed());
             drop(guard); // Will panic with expected message
         }
     };
@@ -46,50 +50,54 @@ macro_rules! guard_ctor {
 /// Matches on final `armed` or `disarmed` state to handle cleanup.
 #[allow(unused_macros)]
 macro_rules! transition {
-    ($test_name:ident, $ctor_expr:expr, $method:ident, $expected:expr, armed_no_panic) => {
+    ($test_name:ident, $ctor_expr:expr, $method:ident => $expected:expr, armed_no_panic) => {
         #[test]
         fn $test_name() {
             let mut guard = $ctor_expr;
             let changed = guard.$method();
             assert_eq!(changed, $expected);
-            assert!(guard.armed());
-            assert!(!guard.disarmed());
+            assert!(guard.is_armed());
+            assert!(!guard.is_disarmed());
+            assert_eq!(guard.state(), GuardState::Armed);
         }
     };
     // Transition ending in armed state - auto-disarms
-    ($test_name:ident, $ctor_expr:expr, $method:ident, $expected:expr, armed, $panic_msg:literal) => {
+    ($test_name:ident, $ctor_expr:expr, $method:ident => $expected:expr, armed: $panic_msg:literal) => {
         #[test]
         #[should_panic(expected = $panic_msg)]
         fn $test_name() {
             let mut guard = $ctor_expr;
             let changed = guard.$method();
             assert_eq!(changed, $expected);
-            assert!(guard.armed());
-            assert!(!guard.disarmed());
+            assert!(guard.is_armed());
+            assert!(!guard.is_disarmed());
+            assert_eq!(guard.state(), GuardState::Armed);
         }
     };
 
-    ($test_name:ident, $ctor_expr:expr, $method:ident, $expected:expr, armed) => {
+    ($test_name:ident, $ctor_expr:expr, $method:ident => $expected:expr, armed) => {
         #[test]
         #[should_panic(expected = "Value was dropped without being unwrapped")]
         fn $test_name() {
             let mut guard = $ctor_expr;
             let changed = guard.$method();
             assert_eq!(changed, $expected);
-            assert!(guard.armed());
-            assert!(!guard.disarmed());
+            assert!(guard.is_armed());
+            assert!(!guard.is_disarmed());
+            assert_eq!(guard.state(), GuardState::Armed);
         }
     };
 
     // Transition ending in disarmed state - safe to drop
-    ($test_name:ident, $ctor_expr:expr, $method:ident, $expected:expr, disarmed) => {
+    ($test_name:ident, $ctor_expr:expr, $method:ident => $expected:expr, disarmed) => {
         #[test]
         fn $test_name() {
             let mut guard = $ctor_expr;
             let changed = guard.$method();
             assert_eq!(changed, $expected);
-            assert!(guard.disarmed());
-            assert!(!guard.armed());
+            assert!(guard.is_disarmed());
+            assert!(!guard.is_armed());
+            assert_eq!(guard.state(), GuardState::Disarmed);
         }
     };
 }
@@ -165,6 +173,7 @@ macro_rules! test_drop {
     // Drop should not panic
     ($test_name:ident, $method_call:expr, no_panic) => {
         #[test]
+        #[allow(dropping_copy_types)]
         fn $test_name() {
             let wrapper = $method_call;
             drop(wrapper);
@@ -185,27 +194,12 @@ macro_rules! wrap_ctor {
     };
 }
 
-/// Test macro for the forget method.
-/// Pattern: test_forget!(test_name, ctor);
-#[allow(unused_macros)]
-macro_rules! test_forget {
-    ($test_name:ident, $ctor:expr) => {
-        #[test]
-        fn $test_name() {
-            let wrapper = $ctor;
-            wrapper.forget();
-        }
-    };
-}
-
 #[allow(unused_imports)]
 pub(crate) use guard_ctor;
 #[allow(unused_imports)]
 pub(crate) use set_msg;
 #[allow(unused_imports)]
 pub(crate) use test_drop;
-#[allow(unused_imports)]
-pub(crate) use test_forget;
 #[allow(unused_imports)]
 pub(crate) use transition;
 #[allow(unused_imports)]

@@ -1,5 +1,5 @@
 use crate::DEFAULT_DROP_PANIC_MSG;
-use std::mem::ManuallyDrop;
+use core::mem::ManuallyDrop;
 
 /// A wrapper around a `T` value that always [`panic!`]s if dropped without being
 /// [`Self::unwrap`]ed or [`Self::forget`]ten.
@@ -25,7 +25,7 @@ impl<T> NoDropEmpty<T> {
     pub const PANIC_MSG: &'static str = DEFAULT_DROP_PANIC_MSG;
 
     /// Creates a new wrapper around `value`.
-    pub fn wrap(value: T) -> Self {
+    pub const fn wrap(value: T) -> Self {
         Self(value)
     }
 
@@ -45,12 +45,12 @@ impl<T> NoDropEmpty<T> {
         let this = ManuallyDrop::new(self);
         // SAFETY: `T` is moved out of the wrapper exactly once, then this type is dropped.
         // No uninitialized access can occur.
-        unsafe { std::ptr::read(&raw const this.0) }
+        unsafe { core::ptr::read(&raw const this.0) }
     }
 
     /// Forgets this guard, safely dropping it.
     #[inline]
-    pub fn forget(self) {
+    pub const fn forget(self) {
         let _ = ManuallyDrop::new(self);
     }
 }

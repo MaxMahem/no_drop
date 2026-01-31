@@ -1,6 +1,7 @@
 #[doc(hidden)]
 pub mod drop_guard_empty;
 #[doc(hidden)]
+#[cfg(feature = "alloc")]
 pub mod drop_guard_msg;
 #[doc(hidden)]
 pub mod drop_guard_no_op;
@@ -9,8 +10,13 @@ mod guard_state;
 pub use guard_state::GuardState;
 
 pub use drop_guard_empty::DropGuardEmpty;
+
+#[cfg(feature = "alloc")]
 pub use drop_guard_msg::{DropGuardMsg, DropGuardMsg as DropGuard};
+
 pub type DropGuardNoOpEmpty = drop_guard_no_op::DropGuardNoOp<'static, crate::markers::NoMsg>;
+
+#[cfg(feature = "alloc")]
 pub type DropGuardNoOpMsg<'msg> = drop_guard_no_op::DropGuardNoOp<'msg, crate::markers::Msg>;
 
 /// Error type returned when attempting to turn a Drop Guard into a No Drop when it is not armed.

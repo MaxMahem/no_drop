@@ -1,13 +1,14 @@
-use std::borrow::Cow;
+use alloc::borrow::Cow;
 
 use crate::guards::{GuardNotArmed, GuardState};
 use crate::wrap::NoDropMsg;
 
 /// A mutable drop guard with custom panic message.
 ///
-/// This guard can be toggled between [`Self::armed`] and [`Self::disarmed`] states via
-/// [`Self::arm`] and [`Self::disarm`], respectively. While [`Self::armed`] it will [`panic!`]
-/// with the custom message if dropped, when [`Self::disarmed`] it will not.
+/// This guard can be toggled between [`Armed`](GuardState::Armed) and [`Disarmed`](GuardState::Disarmed)
+/// states via [`Self::arm`] and [`Self::disarm`], respectively. While `Armed`
+/// it will [`panic!`] with the custom message if dropped, when `Disarmed` it
+/// will not.
 ///
 /// This can be used to guard a critical state or another type, ensuring it is not dropped while in
 /// that state.
@@ -67,15 +68,21 @@ impl<'msg> DropGuardMsg<'msg> {
         Self(DropGuardMsgState::Disarmed(msg.into()))
     }
 
+    /// Returns the current state of the guard.
+    #[must_use]
+    pub const fn state(&self) -> GuardState {
+        if self.is_armed() { GuardState::Armed } else { GuardState::Disarmed }
+    }
+
     /// Returns whether the guard is armed.
     #[must_use]
-    pub const fn armed(&self) -> bool {
+    pub const fn is_armed(&self) -> bool {
         matches!(self.0, DropGuardMsgState::Armed(_))
     }
 
     /// Returns whether the guard is disarmed.
     #[must_use]
-    pub const fn disarmed(&self) -> bool {
+    pub const fn is_disarmed(&self) -> bool {
         matches!(self.0, DropGuardMsgState::Disarmed(_))
     }
 
@@ -96,9 +103,9 @@ impl<'msg> DropGuardMsg<'msg> {
     /// Helper method to apply a state transformation function.
     fn apply_state_change(
         &mut self,
-        f: impl FnOnce(DropGuardMsgState<'msg>) -> (DropGuardMsgState<'msg>, bool),
+        transform: impl FnOnce(DropGuardMsgState<'msg>) -> (DropGuardMsgState<'msg>, bool),
     ) -> bool {
-        let (new_state, changed) = f(std::mem::replace(&mut self.0, DropGuardMsgState::EMPTY));
+        let (new_state, changed) = transform(core::mem::replace(&mut self.0, DropGuardMsgState::EMPTY));
         self.0 = new_state;
         changed
     }
@@ -107,7 +114,7 @@ impl<'msg> DropGuardMsg<'msg> {
     ///
     /// Returns the new state of the guard.
     pub fn toggle(&mut self) -> GuardState {
-        let (new_state, state) = std::mem::replace(&mut self.0, DropGuardMsgState::EMPTY).toggle();
+        let (new_state, state) = core::mem::replace(&mut self.0, DropGuardMsgState::EMPTY).toggle();
         self.0 = new_state;
         state
     }

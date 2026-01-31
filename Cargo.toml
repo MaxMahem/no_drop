@@ -1,11 +1,11 @@
 [package]
 name = "no_drop"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.85.1"
 description = "A simple wrapper type that guards against a value being automatically dropped."
 repository = "https://github.com/MaxMahem/no_drop"
-documentation = "https://MaxMahem.github.io/no_drop/index.html"
+documentation = "https://docs.rs/no_drop/"
 homepage = "https://github.com/MaxMahem/no_drop"
 keywords = ["drop", "guard", "memory", "safety", "wrapper"]
 categories = ["rust-patterns", "memory-management"]
@@ -13,13 +13,18 @@ license = "MIT OR Apache-2.0"
 authors = ["Austin Stanley <MaxTMahem@gmail.com>"]
 readme = "README.md"
 
+[features]
+default = ["alloc"]
+alloc = []
+
 [dependencies]
-derive_more = { version = "2.1.0", features = ["as_ref", "deref", "deref_mut"] }
+derive_more = { version = "2.1.0", default-features = false, features = ["as_ref", "deref", "deref_mut"] }
 sealed = "0.6.0"
 thiserror = "2.0.17"
 
 [dev-dependencies]
 criterion = "0.8.1"
+no_drop = { path = ".", features = ["alloc"] }
 
 [[bench]]
 name = "zero_cost"

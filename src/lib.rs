@@ -1,19 +1,18 @@
+#![no_std]
 #![doc = include_str!("../README.md")]
+#![warn(clippy::pedantic, clippy::cargo, clippy::nursery)]
+#![warn(missing_docs, missing_debug_implementations)]
+#![allow(clippy::match_bool, clippy::single_match_else)]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 /// Internal default panic message used by Empty variant types.
 pub(crate) const DEFAULT_DROP_PANIC_MSG: &str = "Value was dropped without being unwrapped";
 
-#[warn(clippy::pedantic)]
-#[warn(clippy::nursery)]
-#[warn(clippy::cargo)]
-#[warn(missing_docs)]
-#[warn(missing_debug_implementations)]
-#[allow(clippy::match_bool)]
-#[allow(clippy::single_match_else)]
 #[doc(hidden)]
 pub mod guards;
-#[doc(hidden)]
-pub mod into;
+
 #[doc(hidden)]
 pub mod markers;
 
@@ -31,15 +30,11 @@ pub mod dbg {
     #[cfg(not(debug_assertions))]
     pub use crate::wrap::NoDropNoOpEmpty as NoDropEmpty;
 
-    #[cfg(debug_assertions)]
-    pub use crate::into::IntoNoDropRls as IntoNoDrop;
-
-    #[cfg(not(debug_assertions))]
-    pub use crate::into::IntoNoDropDbg as IntoNoDrop;
-
+    #[cfg(feature = "alloc")]
     #[cfg(debug_assertions)]
     pub use crate::wrap::NoDropMsg;
 
+    #[cfg(feature = "alloc")]
     #[cfg(not(debug_assertions))]
     pub use crate::wrap::NoDropNoOpMsg as NoDropMsg;
 
@@ -49,9 +44,11 @@ pub mod dbg {
     #[cfg(not(debug_assertions))]
     pub use crate::guards::DropGuardNoOpEmpty as DropGuardEmpty;
 
+    #[cfg(feature = "alloc")]
     #[cfg(debug_assertions)]
     pub use crate::guards::DropGuard;
 
+    #[cfg(feature = "alloc")]
     #[cfg(not(debug_assertions))]
     pub use crate::guards::DropGuardNoOpMsg as DropGuard;
 }
@@ -62,11 +59,11 @@ pub mod rls {
 
     pub use crate::wrap::NoDrop;
 
-    pub use crate::into::IntoNoDropRls as IntoNoDrop;
-
+    #[cfg(feature = "alloc")]
     pub use crate::wrap::NoDropMsg;
 
     pub use crate::guards::DropGuardEmpty;
 
+    #[cfg(feature = "alloc")]
     pub use crate::guards::DropGuard;
 }
