@@ -11,30 +11,20 @@ A selection of guard types that guard against values being automatically dropped
 
 ## Features
 
-### `NoDrop` and `NoDropMsg`
+* [`NoDrop`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDrop.html) and [`NoDropMsg`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDropMsg.html) - Wraps a value in a guard type to ensure it is explicitly consumed before the guard is dropped.
+* [`DropGuard`](https://docs.rs/no_drop/latest/no_drop/rls/struct.DropGuard.html) and [`DropGuardMsg`](https://docs.rs/no_drop/latest/no_drop/rls/struct.DropGuardMsg.html) - A mutable drop guard that can be dynamically armed and disarmed.
+* [`dbg`](https://MaxMahem.github.io/no_drop/no_drop/dbg/index.html) and [`rls`](https://MaxMahem.github.io/no_drop/no_drop/rls/index.html) modules - identical API, provide panic protection in debug mode only or in all builds respectively.
 
-Wraps a value in a guard type to ensure it is explicitly consumed before the guard is dropped.
+## Install
 
-- **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with drop checks only in debug mode
-- **Always-Checked Mode**: Use the `rls` module for drop checks in all build configurations
-- **Custom Messages**: Use the `NoDropMsg` variant to provide custom panic messages
+It's on [crates.io](https://crates.io/crates/no_drop).
 
-### `DropGuard` and `DropGuardMsg`
+## Usage - [`NoDrop`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDrop.html) and [`NoDropMsg`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDropMsg.html)
 
-A mutable drop guard that can be dynamically armed and disarmed.
+Wrap a value in a guard type to ensure it is explicitly consumed before the guard is dropped.
 
-- **Debug-Only Checks**: Use the `dbg` module for zero-cost release builds with drop checks only in debug mode. Nearly zero cost in release builds (one `bool`).
-- **Always-Checked Mode**: Use the `rls` module for drop checks in all build configurations
-- **Custom Messages**: Use the `DropGuardMsg` variant to provide custom panic messages
-
-## Usage - `NoDrop` and `NoDropMsg`
-
-### Debug-Only Protection (`dbg` module)
-
-The `dbg` module provides panic protection in debug builds while being a zero cost wrapper in release builds:
-
-```rust
-use no_drop::dbg::NoDrop;
+```rust,no_run
+use no_drop::rls::NoDrop;
 
 let value = NoDrop::wrap(42);
 
@@ -42,32 +32,11 @@ let value = NoDrop::wrap(42);
 let inner = value.unwrap();
 assert_eq!(inner, 42);
 
-// This would panic in debug builds:
-// let value = NoDrop::wrap(42);
-// drop(value); // panic: "Value was dropped without being unwrapped"
+let value = NoDrop::wrap(43);
+drop(value); // panic: "Value was dropped without being unwrapped"
 ```
 
-### Always-Panicking Protection (`rls` module)
-
-The `rls` module provides panic protection in both debug and release builds:
-
-```rust
-use no_drop::rls::NoDrop;
-
-let value = NoDrop::wrap("important data");
-
-// Must consume the value
-let inner = value.unwrap();
-assert_eq!(inner, "important data");
-
-// This would panic in ALL builds:
-// let value = NoDrop::wrap("data");
-// drop(value); // panic: "Value was dropped without being unwrapped"
-```
-
-### Custom Panic Messages (`NoDropMsg`)
-
-For more descriptive error messages, use `NoDropMsg` with custom panic messages:
+For more descriptive error messages, use [`NoDropMsg`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDropMsg.html) with custom panic messages:
 
 ```rust,no_run
 use no_drop::rls::NoDropMsg;
@@ -77,22 +46,14 @@ let value = NoDropMsg::wrap(42, "forgot to process the answer");
 drop(value); // panic: "forgot to process the answer"
 ```
 
-To properly use the value:
-
-```rust
-use no_drop::rls::NoDropMsg;
-
-let value = NoDropMsg::wrap(42, "forgot to process the answer");
-assert_eq!(42, value.unwrap());
-```
-
 ### Using as a Drop Guard
 
-`NoDrop` and `NoDropMsg` support using a unit type `()` instances, allowing you to use them as drop guards within another type, to ensure a specific method is called before the type is dropped. This can be useful to enforce a manual RAII pattern or to enforce a builder pattern.
+[`NoDrop`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDrop.html) and [`NoDropMsg`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDropMsg.html) support using unit type `()` instances, allowing you to use them as drop guards within another type, to ensure a specific method is called before the type is dropped. This can be useful to enforce a manual RAII pattern or to enforce a builder pattern.
 
 ```rust
-use no_drop::dbg::NoDrop;
+use no_drop::rls::NoDrop;
 
+#[derive(Debug, Default)] // NoDrop implements Default and Debug
 struct Transaction {
     guard: NoDrop,
     other_data: i32,
@@ -115,45 +76,14 @@ t.finalize();
 // Dropping without calling `finalize()` would panic.
 ```
 
-For custom panic messages with drop guards, use `NoDropMsg::guard()`:
+For custom panic messages with drop guards, use [`NoDropMsg::guard`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDropMsg.html#method.guard)
+
+## Usage - [`DropGuard`](https://docs.rs/no_drop/latest/no_drop/rls/struct.DropGuard.html) and [`DropGuardMsg`](https://docs.rs/no_drop/latest/no_drop/rls/struct.DropGuardMsg.html)
+
+Unlike `NoDrop` types, which are consumed when unwrapped, `DropGuard`s can be dynamically armed and disarmed. This makes them ideal for protecting mutable state or critical sections that may be entered and exited, possibly multiple times.
 
 ```rust
-use no_drop::dbg::NoDropMsg;
-
-struct Transaction {
-    guard: NoDropMsg<'static, ()>,
-    other_data: i32,
-}
-
-impl Transaction {
-    fn new(x: i32) -> Self {
-        Self { 
-            guard: NoDropMsg::guard("Transaction was dropped without being finalized"), 
-            other_data: x 
-        }
-    }
-
-    fn finalize(self) {
-        // do necessary finalization work
-        self.guard.forget(); // Disarm the guard
-    }
-}
-
-let t = Transaction::new(10);
-t.finalize();
-// Dropping without calling `finalize()` would panic with custom message.
-```
-
-## Usage - `DropGuard` and `DropGuardMsg`
-
-Unlike `NoDrop` types, which are consumed when unwrapped, `DropGuards` can be dynamically armed and disarmed. This makes them ideal for protecting mutable state or critical sections that may be entered and exited, possibly multiple times.
-
-### `DropGuard` - Custom Messages
-
-`DropGuard` (an alias for `DropGuardMsg`) provides custom panic messages and can be toggled between armed and disarmed states:
-
-```rust
-use no_drop::dbg::DropGuard;
+use no_drop::rls::DropGuard;
 
 let mut guard = DropGuard::new_armed("critical section not exited properly");
 
@@ -170,23 +100,17 @@ guard.arm();
 guard.disarm(); // Message is retained across arm/disarm cycles
 ```
 
-### `DropGuardEmpty` - No Messages
+For cases where you don't need a custom panic message, use [`DropGuardEmpty`](https://docs.rs/no_drop/latest/no_drop/rls/struct.DropGuardEmpty.html), which provides the same arm/disarm functionality with a default panic message
 
-For cases where you don't need a custom panic message, use `DropGuardEmpty`, which provides the same arm/disarm functionality with a default panic message
+## Debug vs Release Variants
 
-### Debug vs Release Variants
+`NoDrop`, `NoDropMsg`, `DropGuard`, `DropGuardEmpty` have debug-only and always-panicking variants:
 
-Both `DropGuard` and `DropGuardEmpty` have debug-only and always-panicking variants:
-
-- **`dbg` module**: Nearly zero-cost in release builds (one `bool`), panics only in debug mode
-- **`rls` module**: Always panics in both debug and release builds
-
-```rust
-// Debug-only guard (zero-cost in release)
-use no_drop::dbg::DropGuard;
-let mut guard = DropGuard::new_disarmed("debug only");
-
-// Always-panicking guard (checks in all builds)
-use no_drop::rls::DropGuard as DropGuardRls;
-let mut guard = DropGuardRls::new_disarmed("always checked");
-```
+* [`dbg::NoDrop`](https://docs.rs/no_drop/latest/no_drop/dbg/struct.NoDrop.html): Zero-cost in release builds, panics only in debug mode
+* [`rls::NoDrop`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDrop.html): Always panics in both debug and release builds
+* [`dbg::NoDropMsg`](https://docs.rs/no_drop/latest/no_drop/dbg/struct.NoDropMsg.html): Zero-cost in release builds, panics only in debug mode
+* [`rls::NoDropMsg`](https://docs.rs/no_drop/latest/no_drop/rls/struct.NoDropMsg.html): Always panics in both debug and release builds
+* [`dbg::DropGuard`](https://docs.rs/no_drop/latest/no_drop/dbg/struct.DropGuard.html): Nearly zero-cost in release builds (one `bool`), panics only in debug mode
+* [`rls::DropGuard`](https://docs.rs/no_drop/latest/no_drop/rls/struct.DropGuard.html): Always panics in both debug and release builds
+* [`dbg::DropGuardEmpty`](https://docs.rs/no_drop/latest/no_drop/dbg/struct.DropGuardEmpty.html): Nearly zero-cost in release builds (one `bool`), panics only in debug mode
+* [`rls::DropGuardEmpty`](https://docs.rs/no_drop/latest/no_drop/rls/struct.DropGuardEmpty.html): Always panics in both debug and release builds

@@ -1,6 +1,6 @@
 [package]
 name = "no_drop"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 rust-version = "1.85.1"
 description = "A simple wrapper type that guards against a value being automatically dropped."
@@ -18,12 +18,12 @@ default = ["alloc"]
 alloc = []
 
 [dependencies]
-derive_more = { version = "2.1.0", default-features = false, features = ["as_ref", "deref", "deref_mut"] }
+derive_more = { version = "2.1.1", default-features = false, features = ["as_ref", "deref", "deref_mut"] }
 sealed = "0.6.0"
-thiserror = "2.0.17"
+thiserror = "2.0.18"
 
 [dev-dependencies]
-criterion = "0.8.1"
+criterion = "0.7.0"
 no_drop = { path = ".", features = ["alloc"] }
 
 [[bench]]
